@@ -1,0 +1,35 @@
+version: '3.9'
+services:
+  app:
+    build: .
+    container_name: pdm-backend-server
+    image: pdm-backend-server
+    ports:
+      - 2323:2323
+    env_file:
+      - .env
+
+  postgres:
+    image: postgres:15.1
+    container_name: postgres
+    environment:
+      POSTGRES_USER: super_admin
+      POSTGRES_PASSWORD: SomeSecretPassword
+      PGDATA: /data/postgres
+    volumes:
+      - postgres-data:/data/postgres
+
+  influxdb:
+    image: influxdb:2.6.1
+    container_name: influxdb
+    environment:
+      INFLUXDB_DB: db0
+      INFLUXDB_ADMIN_USER: INFLUXDB_USERNAME
+      INFLUXDB_ADMIN_PASSWORD: INFLUXDB_PASSWORD
+    volumes:
+      - influxdb-data:/data/influxdb
+
+volumes:
+  postgres-data:
+
+  influxdb-data:
