@@ -12,14 +12,15 @@ def create_database():
 
 
 def initialize_server():
-    from .routers import data, login
+    from .routers import data, login, signup
     
     app = FastAPI()
     
     app.include_router(data.router, prefix=API_V1)
     app.include_router(login.router, prefix=API_V1)
+    app.include_router(signup.router, prefix=API_V1)
     
-    # create_database()
+    create_database()
     
     return app
     

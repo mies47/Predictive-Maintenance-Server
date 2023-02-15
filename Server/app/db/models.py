@@ -1,6 +1,7 @@
 from sqlalchemy.sql.expression import null
-from .postgres import Base
 from sqlalchemy import String, Integer, Column
+
+from .postgres import Base
 
 
 class Admin(Base):
