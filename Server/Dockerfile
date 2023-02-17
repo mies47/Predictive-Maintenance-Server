@@ -17,4 +17,4 @@ COPY . ./
 
 EXPOSE 2323
 
-CMD ["./run.sh"]
+CMD ["python3", "main.py"]

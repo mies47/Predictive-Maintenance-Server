@@ -5,8 +5,8 @@ API_V1 = '/api/v1'
 
 
 def create_database():
-    from .db.postgres import Base, engine
-    from .db.models import Admin, Gateway
+    from .postgresdb.postgres import Base, engine
+    from .postgresdb.models import Admin, Gateway
 
     Base.metadata.create_all(engine)
 
@@ -23,5 +23,3 @@ def initialize_server():
     create_database()
     
     return app
-    
-    
