@@ -3,8 +3,8 @@ from fastapi.responses import JSONResponse
 from werkzeug.security import check_password_hash
 
 from ..models.CredentialsModel import AdminLoginModel, GatewayLoginModel
-from ..db.postgres import SessionLocal
-from ..db.models import Gateway, Admin
+from ..postgresdb.postgres import SessionLocal
+from ..postgresdb.models import Gateway, Admin
 from ..auth.handler import signJWT
 
 
