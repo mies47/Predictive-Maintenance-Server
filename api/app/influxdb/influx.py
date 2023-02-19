@@ -1,6 +1,8 @@
 import os
+import json
 from datetime import datetime
 from dotenv import load_dotenv
+from collections import defaultdict
 
 from ..models.SendDataModel import VibrationDataModel
 
@@ -43,21 +45,29 @@ class InfluxDB:
                     .time(time=datetime.utcfromtimestamp(data.time))
 
         self.write_api.write(bucket=DB_BUCKET, org=DB_ORG, record=[x_point, y_point, z_point])
-    
-
-    def get_all_vibration_data(self):
-        query = f'from(bucket:"{DB_BUCKET}") |> range(start: 0)'
-
-        result = self.query_api.query(org=DB_ORG, query=query)
-
-        for table in result:
-            for record in table.records:
-                print(record)
 
 
-    def get_node_vibration_data(self, nodeId: str):
+    '''Returns all vibration data written in db if nodeId is None'''
+    def get_vibration_data(self, nodeId: str = None):
+        filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
         query = f'from(bucket:"{DB_BUCKET}")\
+        |> range(start: 0)\
         |> filter(fn:(r) => r._measurement == "vibration_measurement")\
-        |> filter(fn:(r) => r.nodeId == "{nodeId}")'
+        {filter_by_node if nodeId is not None else ""}\
+        |> keep(columns: ["_time", "_field", "_value", "nodeId"])\
+        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
+        |> yield()'
 
-        result = self.query_api.query(org=DB_ORG, query=query)
+        result = self.query_api.query_data_frame(org=DB_ORG, query=query)
+        result = json.loads(result.to_json(orient='records'))
+
+        results = defaultdict(lambda: [])
+        for r in result:
+            results[r['nodeId']].append({
+                'x': r['x'],
+                'y': r['y'],
+                'z': r['z'],
+                'time': r['_time'],
+            })
+
+        return results

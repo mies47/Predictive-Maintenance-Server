@@ -6,6 +6,8 @@ from ..influxdb.influx import InfluxDB
 
 from pydantic import parse_obj_as
 
+import pandas as pd
+
 
 router = APIRouter(
     prefix="/data",
@@ -17,9 +19,19 @@ router = APIRouter(
 
 influx = InfluxDB()
 
+
 @router.get("/")
-async def default_response():
-    return {"response": "Data route is working!"}
+async def get_all_data():
+    result = influx.get_vibration_data()
+
+    return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+
+
+@router.get("/{nodeId}")
+async def get_node_data(nodeId: str):
+    result = influx.get_vibration_data(nodeId=nodeId)
+
+    return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
 
 @router.post(
