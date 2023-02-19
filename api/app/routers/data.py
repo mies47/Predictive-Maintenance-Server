@@ -1,6 +1,9 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, status
+from fastapi.responses import JSONResponse
+
 from ..models.SendDataModel import DataModelList, DataModel, VibrationDataModel
 from ..influxdb.influx import InfluxDB
+
 from pydantic import parse_obj_as
 
 
@@ -27,11 +30,9 @@ async def default_response():
 )
 async def send_data(dataList: DataModelList):
 
-    # dList = parse_obj_as(DataModelList, dataList)
-    # for nodeData in dList.data:
-    #     nData = parse_obj_as(DataModel, nodeData)
-    #     for vibrationData in nData.vibrationData:
-    #         vData = parse_obj_as(VibrationDataModel, vibrationData)
-    #         influx.write_vibration_data(nodeId=nData.nodeId, data=vData)
-
-    influx.get_all_vibration_data()
+    dList = parse_obj_as(DataModelList, dataList)
+    for nodeData in dList.data:
+        nData = parse_obj_as(DataModel, nodeData)
+        for vibrationData in nData.vibrationData:
+            vData = parse_obj_as(VibrationDataModel, vibrationData)
+            influx.write_vibration_data(nodeId=nData.nodeId, data=vData)
