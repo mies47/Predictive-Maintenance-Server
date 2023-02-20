@@ -32,7 +32,7 @@ async def gateway_login(loginModel: GatewayLoginModel):
     
     if check_password_hash(gateway.password, loginModel.password):
         return JSONResponse(status_code=status.HTTP_200_OK, 
-                            content={'token': signJWT(gateway.mac)})
+                            content={'token': signJWT('mac', gateway.mac)})
       
     return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, 
                          detail='Incorrect password')  
@@ -49,7 +49,7 @@ async def admin_login(loginModel: AdminLoginModel):
     
     if check_password_hash(admin.password, loginModel.password):
         return JSONResponse(status_code=status.HTTP_200_OK, 
-                            content={'token': signJWT(admin.email)})
+                            content={'token': signJWT('email', admin.email)})
       
     return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, 
                          detail='Incorrect password')  
