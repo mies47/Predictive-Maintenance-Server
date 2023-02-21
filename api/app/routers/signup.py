@@ -9,25 +9,20 @@ from ..auth.handler import signJWT, HASH_ALGORITHM
 
 
 router = APIRouter(
-    prefix="/signup",
-    tags=["signup"],
-    responses={404: {"description": "Not found"}},
+    prefix='/signup',
+    tags=['signup'],
+    responses={404: {'description': 'Not found'}},
 )
 
 db = SessionLocal()
 
 
-@router.get("/")
-async def default_response():
-    return {"response": "Sign up route is working!"}
-
-
-@router.post("/gateway")
+@router.post('/gateway')
 async def gateway_signup(signupModel: GatewaySignupModel):
     gateway = db.query(Gateway).filter(Gateway.mac == signupModel.mac).first()
     
     if gateway:
-        return HTTPException(status_code=status.HTTP_409_CONFLICT, 
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, 
                              detail='Entered gateway exists')
     
     new_gateway = Gateway(mac=signupModel.mac, 
@@ -39,12 +34,12 @@ async def gateway_signup(signupModel: GatewaySignupModel):
                         content={'token': signJWT('mac', new_gateway.mac)})
   
 
-@router.post("/admin")
+@router.post('/admin')
 async def admin_signup(signupModel: AdminSignupModel):
     admin = db.query(Admin).filter(Admin.email == signupModel.email).first()
     
     if admin:
-        return HTTPException(status_code=status.HTTP_409_CONFLICT, 
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, 
                              detail='Entered admin exists')
     
     new_admin = Admin(name=signupModel.name, 
