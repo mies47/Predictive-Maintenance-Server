@@ -28,21 +28,24 @@ class InfluxDB:
         self.query_api = self.client.query_api()
 
 
-    def write_vibration_data(self, nodeId: str, data: VibrationDataModel):
+    def write_vibration_data(self, measurementId: str, nodeId: str, data: VibrationDataModel):
         x_point = Point('vibration_measurement')\
             .tag('nodeId', nodeId)\
-                .field('x', data.x)\
-                    .time(time=datetime.utcfromtimestamp(data.time))
+                .tag('measurementId', measurementId)\
+                    .field('x', data.x)\
+                        .time(time=datetime.utcfromtimestamp(data.time))
         
         y_point = Point('vibration_measurement')\
             .tag('nodeId', nodeId)\
-                .field('y', data.y)\
-                    .time(time=datetime.utcfromtimestamp(data.time))
+                .tag('measurementId', measurementId)\
+                    .field('y', data.y)\
+                        .time(time=datetime.utcfromtimestamp(data.time))
         
         z_point = Point('vibration_measurement')\
             .tag('nodeId', nodeId)\
-                .field('z', data.z)\
-                    .time(time=datetime.utcfromtimestamp(data.time))
+                .tag('measurementId', measurementId)\
+                    .field('z', data.z)\
+                        .time(time=datetime.utcfromtimestamp(data.time))
 
         self.write_api.write(bucket=DB_BUCKET, org=DB_ORG, record=[x_point, y_point, z_point])
 
@@ -54,7 +57,7 @@ class InfluxDB:
         |> range(start: 0)\
         |> filter(fn:(r) => r._measurement == "vibration_measurement")\
         {filter_by_node if nodeId is not None else ""}\
-        |> keep(columns: ["_time", "_field", "_value", "nodeId"])\
+        |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId"])\
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
         |> yield()'
 
@@ -68,6 +71,7 @@ class InfluxDB:
                 'y': r['y'],
                 'z': r['z'],
                 'time': r['_time'],
+                'measurementId': r['measurementId']
             })
 
         return results

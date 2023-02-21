@@ -11,13 +11,14 @@ from ..auth.handler import decodeJWT, signJWT
 from pydantic import parse_obj_as
 
 import pandas as pd
-
+import string
+import random
 
 router = APIRouter(
-    prefix="/data",
-    tags=["data"],
+    prefix='/data',
+    tags=['data'],
     responses={
-        404: {"description": "Not found"}
+        404: {'description': 'Not found'}
     }
 )
 
@@ -74,31 +75,27 @@ async def get_current_gateway(token: HTTPAuthorizationCredentials = Depends(auth
     return gateway
 
 
-@router.get("/")
+@router.get('/')
 async def get_all_data(admin = Depends(get_current_admin)):
     result = influx.get_vibration_data()
 
     return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
 
-@router.get("/{nodeId}")
+@router.get('/{nodeId}')
 async def get_node_data(nodeId: str, admin = Depends(get_current_admin)):
     result = influx.get_vibration_data(nodeId=nodeId)
 
     return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
 
-@router.post(
-    "/",
-    responses={
-        400: {'description': 'Bad request'}
-    }
-)
+@router.post('/')
 async def send_data(dataList: DataModelList, gateway = Depends(get_current_gateway)):
+    measurementId = ''.join(random.choice(string.ascii_letters) for _ in range(32))
 
     dList = parse_obj_as(DataModelList, dataList)
     for nodeData in dList.data:
         nData = parse_obj_as(DataModel, nodeData)
         for vibrationData in nData.vibrationData:
             vData = parse_obj_as(VibrationDataModel, vibrationData)
-            influx.write_vibration_data(nodeId=nData.nodeId, data=vData)
+            influx.write_vibration_data(measurementId=measurementId, nodeId=nData.nodeId, data=vData)
