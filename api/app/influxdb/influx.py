@@ -1,5 +1,6 @@
 import os
 import json
+import copy
 from datetime import datetime
 from dotenv import load_dotenv
 from collections import defaultdict
@@ -8,6 +9,8 @@ from ..models.SendDataModel import VibrationDataModel
 
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
+
+import numpy as np
 
 load_dotenv()
 
@@ -64,14 +67,52 @@ class InfluxDB:
         result = self.query_api.query_data_frame(org=DB_ORG, query=query)
         result = json.loads(result.to_json(orient='records'))
 
-        results = defaultdict(lambda: [])
+        results = defaultdict(lambda: defaultdict(lambda: []))
         for r in result:
-            results[r['nodeId']].append({
+            results[r['nodeId']][r['measurementId']].append({
                 'x': r['x'],
                 'y': r['y'],
                 'z': r['z'],
-                'time': r['_time'],
-                'measurementId': r['measurementId']
+                'time': r['_time']
             })
 
         return results
+
+
+    def _create_matrices(self, data):
+        matrices = copy.deepcopy(data)
+
+        for nId, measurements in matrices.items():
+            for mId, m in measurements.items():
+                matrices[nId][mId] = [np.array([sample['x'], sample['y'], sample['z']], dtype=np.float32) for sample in m]
+
+        return matrices
+
+
+    def _normalize_vibration_data(self, matrices):
+        normalized_matrices = copy.deepcopy(matrices)
+
+        for nId, measurements in matrices.items():
+            for mId, m in measurements.items():
+                sum_of_samples = np.add.reduce(m)
+                normalized_matrices[nId][mId] = np.array(m)
+
+                # Subtracting the average sum of samples from the collected samples
+                if len(m) > 1:
+                    normalized_matrices[nId][mId] -= sum_of_samples / len(m)
+
+        return normalized_matrices
+
+
+    def preprocess_vibration_data(self, nodeId: str = None):
+        # Fetching the data from database
+        data = self.get_vibration_data(nodeId=nodeId)
+
+        # Creating matrices from raw data
+        matrices = self._create_matrices(data=data)
+
+        # Normalizing samples to remove gravity effect
+        normalized_data = self._normalize_vibration_data(matrices=matrices)
+
+        print(normalized_data)
+        
