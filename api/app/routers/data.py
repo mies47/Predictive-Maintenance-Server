@@ -11,8 +11,7 @@ from ..auth.handler import decodeJWT, signJWT
 from pydantic import parse_obj_as
 
 import pandas as pd
-import string
-import random
+import time
 
 router = APIRouter(
     prefix='/data',
@@ -89,9 +88,19 @@ async def get_node_data(nodeId: str, admin = Depends(get_current_admin)):
     return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
 
+@router.post('/preprocess')
+async def preprocess_all_data(admin = Depends(get_current_admin)):
+    result = influx.preprocess_vibration_data()
+
+
+@router.post('/preprocess/{nodeId}')
+async def preprocess_node_data(nodeId: str, admin = Depends(get_current_admin)):
+    result = influx.preprocess_vibration_data(nodeId=nodeId)
+
+
 @router.post('/')
 async def send_data(dataList: DataModelList, gateway = Depends(get_current_gateway)):
-    measurementId = ''.join(random.choice(string.ascii_letters) for _ in range(32))
+    measurementId = f'measurement_{int(time.time())}'
 
     dList = parse_obj_as(DataModelList, dataList)
     for nodeData in dList.data:
