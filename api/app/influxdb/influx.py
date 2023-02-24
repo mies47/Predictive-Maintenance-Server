@@ -79,29 +79,45 @@ class InfluxDB:
         return results
 
 
-    def _create_matrices(self, data):
-        matrices = copy.deepcopy(data)
+    def _create_matrices(self, data: defaultdict(lambda: defaultdict(lambda: []))):
+        matrices = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))
 
-        for nId, measurements in matrices.items():
+        for nId, measurements in data.items():
             for mId, m in measurements.items():
-                matrices[nId][mId] = [np.array([sample['x'], sample['y'], sample['z']], dtype=np.float32) for sample in m]
+                for sample in m:
+                    matrices[nId][mId]['x'].append(sample['x'])
+                    matrices[nId][mId]['y'].append(sample['y'])
+                    matrices[nId][mId]['z'].append(sample['z'])
+                
+                # Converting collected smaples to numpy arrays
+                matrices[nId][mId]['x'] = np.array(matrices[nId][mId]['x'], dtype=np.float32)
+                matrices[nId][mId]['y'] = np.array(matrices[nId][mId]['y'], dtype=np.float32)
+                matrices[nId][mId]['z'] = np.array(matrices[nId][mId]['z'], dtype=np.float32)
 
         return matrices
 
 
-    def _normalize_vibration_data(self, matrices):
+    def _normalize_vibration_data(self, matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
         normalized_matrices = copy.deepcopy(matrices)
 
         for nId, measurements in matrices.items():
             for mId, m in measurements.items():
-                sum_of_samples = np.add.reduce(m)
-                normalized_matrices[nId][mId] = np.array(m)
+                number_of_samples = m['x'].shape[0]
+                sum_of_x_samples = np.sum(m['x'])
+                sum_of_y_samples = np.sum(m['y'])
+                sum_of_z_samples = np.sum(m['z'])
 
                 # Subtracting the average sum of samples from the collected samples
-                if len(m) > 1:
-                    normalized_matrices[nId][mId] -= sum_of_samples / len(m)
+                if number_of_samples > 1:
+                    normalized_matrices[nId][mId]['x'] -= sum_of_x_samples / number_of_samples
+                    normalized_matrices[nId][mId]['y'] -= sum_of_y_samples / number_of_samples
+                    normalized_matrices[nId][mId]['z'] -= sum_of_z_samples / number_of_samples
 
         return normalized_matrices
+
+    
+    def _calculate_l2_norm(self, matrices):
+        pass
 
 
     def preprocess_vibration_data(self, nodeId: str = None):
