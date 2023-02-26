@@ -116,8 +116,21 @@ class InfluxDB:
         return normalized_matrices
 
     
-    def _calculate_l2_norm(self, matrices):
-        pass
+    def _rms_feature(self, matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+        rms_matrices = copy.deepcopy(matrices)
+
+        for nId, measurements in matrices.items():
+            for mId, m in measurements.items():
+                number_of_samples = m['x'].shape[0]
+                l2_norm_of_x_samples = np.linalg.norm(m['x'])
+                l2_norm_of_y_samples = np.linalg.norm(m['y'])
+                l2_norm_of_z_samples = np.linalg.norm(m['z'])
+
+                rms_matrices[nId][mId]['x'] = l2_norm_of_x_samples / np.sqrt(number_of_samples)
+                rms_matrices[nId][mId]['y'] = l2_norm_of_y_samples / np.sqrt(number_of_samples)
+                rms_matrices[nId][mId]['z'] = l2_norm_of_z_samples / np.sqrt(number_of_samples)
+
+        return rms_matrices
 
 
     def preprocess_vibration_data(self, nodeId: str = None):
@@ -130,5 +143,5 @@ class InfluxDB:
         # Normalizing samples to remove gravity effect
         normalized_data = self._normalize_vibration_data(matrices=matrices)
 
-        print(normalized_data)
-        
+        # Extracting RMS (Root Mean Square) feature from normalized data
+        rms_feature = self._rms_feature(matrices=normalized_data)
