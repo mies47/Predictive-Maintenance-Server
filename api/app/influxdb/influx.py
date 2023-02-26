@@ -116,8 +116,8 @@ class InfluxDB:
         return normalized_matrices
 
     
-    def _rms_feature(self, matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
-        rms_matrices = copy.deepcopy(matrices)
+    def _rms_feature_extraction(self, matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+        rms_feature = copy.deepcopy(matrices)
 
         for nId, measurements in matrices.items():
             for mId, m in measurements.items():
@@ -126,11 +126,11 @@ class InfluxDB:
                 l2_norm_of_y_samples = np.linalg.norm(m['y'])
                 l2_norm_of_z_samples = np.linalg.norm(m['z'])
 
-                rms_matrices[nId][mId]['x'] = l2_norm_of_x_samples / np.sqrt(number_of_samples)
-                rms_matrices[nId][mId]['y'] = l2_norm_of_y_samples / np.sqrt(number_of_samples)
-                rms_matrices[nId][mId]['z'] = l2_norm_of_z_samples / np.sqrt(number_of_samples)
+                rms_feature[nId][mId] = (l2_norm_of_x_samples / np.sqrt(number_of_samples)) ** 2 \
+                    + (l2_norm_of_y_samples / np.sqrt(number_of_samples)) ** 2 \
+                        + (l2_norm_of_z_samples / np.sqrt(number_of_samples)) ** 2
 
-        return rms_matrices
+        return rms_feature
 
 
     def preprocess_vibration_data(self, nodeId: str = None):
@@ -144,4 +144,4 @@ class InfluxDB:
         normalized_data = self._normalize_vibration_data(matrices=matrices)
 
         # Extracting RMS (Root Mean Square) feature from normalized data
-        rms_feature = self._rms_feature(matrices=normalized_data)
+        rms_feature = self._rms_feature_extraction(matrices=normalized_data)
