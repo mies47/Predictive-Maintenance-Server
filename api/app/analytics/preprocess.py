@@ -1,5 +1,7 @@
 import numpy as np
 
+from .clustering import MeanShiftClustering
+
 from collections import defaultdict
 from copy import deepcopy
 
@@ -46,6 +48,7 @@ class Preprocess:
         return normalized_matrices
 
     
+    # Root Mean Square feature
     def _rms_feature_extraction(self, matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
         rms_feature = deepcopy(matrices)
 
@@ -61,6 +64,38 @@ class Preprocess:
                         + (l2_norm_of_z_samples / np.sqrt(number_of_samples)) ** 2
 
         return rms_feature
+
+
+    # Power Spectral Density feature
+    def _psd_feature_extraction(self, matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+        psd_feature = deepcopy(matrices)
+
+
+    # Outlier detection using mean shift clustering
+    def _outlier_detection(self, matrices):
+        pass
+
+    
+    # Using this method to pinpoint outlier sensor data
+    def _compute_average_accelaration(self):
+        if self.vibration_data == None:
+            return
+        
+        average_accelaration = self._create_matrices()
+
+        for nId, measurements in average_accelaration.items():
+            for mId, m in measurements.items():
+                number_of_samples = m['x'].shape[0]
+
+                average_of_x_accelaration = np.sum(m['x']) / number_of_samples
+                average_of_y_accelaration = np.sum(m['y']) / number_of_samples
+                average_of_z_accelaration = np.sum(m['z']) / number_of_samples
+
+                average_accelaration[nId][mId]['x'] = average_of_x_accelaration
+                average_accelaration[nId][mId]['y'] = average_of_y_accelaration
+                average_accelaration[nId][mId]['z'] = average_of_z_accelaration
+
+        return average_accelaration
 
 
     def start(self):
