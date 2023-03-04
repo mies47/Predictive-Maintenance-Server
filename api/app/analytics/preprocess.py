@@ -1,5 +1,7 @@
 import numpy as np
 
+from scipy.fft import dct
+
 from .clustering import MeanShiftClustering
 
 from collections import defaultdict
@@ -70,6 +72,21 @@ class Preprocess:
     def _psd_feature_extraction(self, matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
         psd_feature = deepcopy(matrices)
 
+        for nId, measurements in matrices.items():
+            for mId, m in measurements.items():
+                number_of_samples = m['x'].shape[0]
+
+                # Creating a number_of_samples * number_of_samples DCT matrix based on each measurement
+                dct_matrix = dct(np.eye(number_of_samples), axis=0)
+
+                converted_x_samples = np.sum((m['x'] @ dct_matrix) ** 2) / (2 * number_of_samples)
+                converted_y_samples = np.sum((m['y'] @ dct_matrix) ** 2) / (2 * number_of_samples)
+                converted_z_samples = np.sum((m['z'] @ dct_matrix) ** 2) / (2 * number_of_samples)
+
+                psd_feature[nId][mId] = converted_x_samples + converted_y_samples + converted_z_samples
+
+        return psd_feature
+
 
     # Outlier detection using mean shift clustering
     def _outlier_detection(self, matrices):
@@ -109,4 +126,8 @@ class Preprocess:
         normalized_data = self._normalize_vibration_data(matrices=matrices)
 
         # Extracting RMS (Root Mean Square) feature from normalized data
-        rms_feature = self._rms_feature_extraction(matrices=normalized_data)
+        rms_feature = self._rms_feature_extraction(matrices=normalized_data)\
+
+
+        # Extracting PSD (Power Spectral Density) feature from normalized data
+        psd_feature = self._psd_feature_extraction(matrices=normalized_data)
