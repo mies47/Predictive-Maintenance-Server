@@ -1,16 +1,8 @@
 import jwt
-import os
 from typing import Dict
-from dotenv import load_dotenv
 from datetime import datetime, timedelta
 
-load_dotenv()
-
-JWT_SECRET = os.getenv('JWT_SECRET')
-JWT_EXPIRES_IN_MINUTES = os.getenv('JWT_EXPIRES_IN_MINUTES')
-JWT_ALGORITHM = os.getenv('JWT_ALGORITHM')
-
-HASH_ALGORITHM=os.getenv('HASH_ALGORITHM')
+from ..utils.env_vars import JWT_SECRET, JWT_EXPIRES_IN_MINUTES, JWT_ALGORITHM, HASH_ALGORITHM
 
 
 def token_response(token: str):
