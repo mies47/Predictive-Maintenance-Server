@@ -1,0 +1,26 @@
+import os
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+
+API_PREFIX = os.getenv('API_PREFIX')
+
+JWT_SECRET = os.getenv('JWT_SECRET')
+JWT_EXPIRES_IN_MINUTES = os.getenv('JWT_EXPIRES_IN_MINUTES')
+JWT_ALGORITHM = os.getenv('JWT_ALGORITHM')
+
+HASH_ALGORITHM=os.getenv('HASH_ALGORITHM')
+
+POSTGRES_USER = os.getenv('POSTGRES_USER')
+POSTGRES_PASS = os.getenv('POSTGRES_PASSWORD')
+POSTGRES_HOST = os.getenv('POSTGRES_HOST')
+POSTGRES_PORT = os.getenv('POSTGRES_PORT')
+POSTGRES_NAME = os.getenv('POSTGRES_DB')
+
+INFLUXDB_HOST = os.getenv('INFLUXDB_HOST')
+INFLUXDB_PORT = os.getenv('INFLUXDB_PORT')
+INFLUXDB_ORG = os.getenv('INFLUXDB_ORG')
+INFLUXDB_BUCKET = os.getenv('INFLUXDB_BUCKET')
+INFLUXDB_TOKEN = os.getenv('INFLUXDB_TOKEN')
