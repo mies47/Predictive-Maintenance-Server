@@ -6,8 +6,7 @@ from ..models.SendDataModel import DataModelList, DataModel, VibrationDataModel
 from ..influxdb.influx import InfluxDB
 from ..postgresdb.postgres import SessionLocal
 from ..postgresdb.models import Gateway, Admin
-from ..auth.handler import decodeJWT, signJWT
-from ..analytics.preprocess import Preprocess
+from ..auth.handler import decodeJWT
 
 from pydantic import parse_obj_as
 
@@ -87,21 +86,6 @@ async def get_node_data(nodeId: str, admin = Depends(get_current_admin)):
     result = influx.get_vibration_data(nodeId=nodeId)
 
     return JSONResponse(content=result, status_code=status.HTTP_200_OK)
-
-
-@router.post('/preprocess')
-async def preprocess_all_data(admin = Depends(get_current_admin)):
-    vibration_data = influx.get_vibration_data()
-
-    preprocessor = Preprocess(vibration_data=vibration_data)
-    preprocessor.start()
-
-@router.post('/preprocess/{nodeId}')
-async def preprocess_node_data(nodeId: str, admin = Depends(get_current_admin)):
-    vibration_data = influx.get_vibration_data(nodeId=nodeId)
-    
-    preprocessor = Preprocess(vibration_data=vibration_data)
-    preprocessor.start()
 
 
 @router.post('/')

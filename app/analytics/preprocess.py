@@ -79,9 +79,9 @@ class Preprocess:
                 # Creating a number_of_samples * number_of_samples DCT matrix based on each measurement
                 dct_matrix = dct(np.eye(number_of_samples), axis=0)
 
-                converted_x_samples = np.sum((m['x'] @ dct_matrix) ** 2) / (2 * number_of_samples)
-                converted_y_samples = np.sum((m['y'] @ dct_matrix) ** 2) / (2 * number_of_samples)
-                converted_z_samples = np.sum((m['z'] @ dct_matrix) ** 2) / (2 * number_of_samples)
+                converted_x_samples = ((m['x'] @ dct_matrix) ** 2) / (2 * number_of_samples)
+                converted_y_samples = ((m['y'] @ dct_matrix) ** 2) / (2 * number_of_samples)
+                converted_z_samples = ((m['z'] @ dct_matrix) ** 2) / (2 * number_of_samples)
 
                 psd_feature[nId][mId] = converted_x_samples + converted_y_samples + converted_z_samples
 
