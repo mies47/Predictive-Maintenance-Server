@@ -76,12 +76,9 @@ class Preprocess:
             for mId, m in measurements.items():
                 number_of_samples = m['x'].shape[0]
 
-                # Creating a number_of_samples * number_of_samples DCT matrix based on each measurement
-                dct_matrix = dct(np.eye(number_of_samples), axis=0)
-
-                converted_x_samples = ((m['x'] @ dct_matrix) ** 2) / (2 * number_of_samples)
-                converted_y_samples = ((m['y'] @ dct_matrix) ** 2) / (2 * number_of_samples)
-                converted_z_samples = ((m['z'] @ dct_matrix) ** 2) / (2 * number_of_samples)
+                converted_x_samples = (dct(m['x']) ** 2) / (2 * number_of_samples)
+                converted_y_samples = (dct(m['y']) ** 2) / (2 * number_of_samples)
+                converted_z_samples = (dct(m['z']) ** 2) / (2 * number_of_samples)
 
                 psd_feature[nId][mId] = converted_x_samples + converted_y_samples + converted_z_samples
 
