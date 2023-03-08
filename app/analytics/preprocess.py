@@ -1,6 +1,6 @@
 import numpy as np
 
-from scipy.fft import dct
+from scipy.fft import dct, rfft, ifft
 
 from .clustering import MeanShiftClustering
 
@@ -37,6 +37,7 @@ class Preprocess:
         for nId, measurements in matrices.items():
             for mId, m in measurements.items():
                 number_of_samples = m['x'].shape[0]
+                
                 sum_of_x_samples = np.sum(m['x'])
                 sum_of_y_samples = np.sum(m['y'])
                 sum_of_z_samples = np.sum(m['z'])
@@ -56,14 +57,10 @@ class Preprocess:
 
         for nId, measurements in matrices.items():
             for mId, m in measurements.items():
-                number_of_samples = m['x'].shape[0]
-                l2_norm_of_x_samples = np.linalg.norm(m['x'])
-                l2_norm_of_y_samples = np.linalg.norm(m['y'])
-                l2_norm_of_z_samples = np.linalg.norm(m['z'])
 
-                rms_feature[nId][mId] = (l2_norm_of_x_samples / np.sqrt(number_of_samples)) ** 2 \
-                    + (l2_norm_of_y_samples / np.sqrt(number_of_samples)) ** 2 \
-                        + (l2_norm_of_z_samples / np.sqrt(number_of_samples)) ** 2
+                rms_feature[nId][mId]['x'] = np.sqrt(np.mean(np.absolute(m['x']) ** 2))
+                rms_feature[nId][mId]['y'] = np.sqrt(np.mean(np.absolute(m['y']) ** 2))
+                rms_feature[nId][mId]['z'] = np.sqrt(np.mean(np.absolute(m['z']) ** 2))
 
         return rms_feature
 
@@ -74,13 +71,10 @@ class Preprocess:
 
         for nId, measurements in matrices.items():
             for mId, m in measurements.items():
-                number_of_samples = m['x'].shape[0]
 
-                converted_x_samples = (dct(m['x']) ** 2) / (2 * number_of_samples)
-                converted_y_samples = (dct(m['y']) ** 2) / (2 * number_of_samples)
-                converted_z_samples = (dct(m['z']) ** 2) / (2 * number_of_samples)
-
-                psd_feature[nId][mId] = converted_x_samples + converted_y_samples + converted_z_samples
+                psd_feature[nId][mId]['x'] = dct(m['y'], type=2, norm='ortho') ** 2
+                psd_feature[nId][mId]['y'] = dct(m['y'], type=2, norm='ortho') ** 2
+                psd_feature[nId][mId]['z'] = dct(m['z'], type=2, norm='ortho') ** 2
 
         return psd_feature
 
@@ -123,8 +117,12 @@ class Preprocess:
         normalized_data = self._normalize_vibration_data(matrices=matrices)
 
         # Extracting RMS (Root Mean Square) feature from normalized data
-        rms_feature = self._rms_feature_extraction(matrices=normalized_data)\
-
+        rms_feature = self._rms_feature_extraction(matrices=normalized_data)
 
         # Extracting PSD (Power Spectral Density) feature from normalized data
         psd_feature = self._psd_feature_extraction(matrices=normalized_data)
+
+        # for nId, measurements in rms_feature.items():
+        #     for mId, m in measurements.items():
+
+        #         print(rms_feature[nId][mId]['x'] ** 2, np.sum(psd_feature[nId][mId]['x']), psd_feature[nId][mId]['x'])
