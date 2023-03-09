@@ -3,19 +3,16 @@ from datetime import datetime
 from collections import defaultdict
 
 from ..models.SendDataModel import VibrationDataModel
-from ..utils.env_vars import INFLUXDB_HOST, INFLUXDB_PORT, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN
+from ..utils.env_vars import INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, INFLUXDB_URI
 
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 
-URL = f'http://{INFLUXDB_HOST}:{INFLUXDB_PORT}'
-
-
 class InfluxDB:
 
     def __init__(self):
-        self.client = InfluxDBClient(url=URL, org=INFLUXDB_ORG, token=INFLUXDB_TOKEN)
+        self.client = InfluxDBClient(url=INFLUXDB_URI, org=INFLUXDB_ORG, token=INFLUXDB_TOKEN)
         self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
         self.query_api = self.client.query_api()
 

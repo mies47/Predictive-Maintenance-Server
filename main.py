@@ -7,7 +7,6 @@ app = initialize_server()
 
 load_dotenv()
 
-
 SERVER_STR = os.getenv('SERVER_STR')
 SERVER_HOST = os.getenv('SERVER_HOST')
 SERVER_PORT = int(os.getenv('SERVER_PORT'))
