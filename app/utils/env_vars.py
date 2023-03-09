@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from urllib.parse import quote
 
 
 load_dotenv()
@@ -19,8 +20,12 @@ POSTGRES_HOST = os.getenv('POSTGRES_HOST')
 POSTGRES_PORT = os.getenv('POSTGRES_PORT')
 POSTGRES_NAME = os.getenv('POSTGRES_DB')
 
+POSTGRES_URI = quote(f'postgresql://{POSTGRES_USER}:{POSTGRES_PASS}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_NAME}')
+
 INFLUXDB_HOST = os.getenv('INFLUXDB_HOST')
 INFLUXDB_PORT = os.getenv('INFLUXDB_PORT')
 INFLUXDB_ORG = os.getenv('INFLUXDB_ORG')
 INFLUXDB_BUCKET = os.getenv('INFLUXDB_BUCKET')
 INFLUXDB_TOKEN = os.getenv('INFLUXDB_TOKEN')
+
+INFLUXDB_URI = quote(f'http://{INFLUXDB_HOST}:{INFLUXDB_PORT}')
