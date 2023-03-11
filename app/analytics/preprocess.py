@@ -1,6 +1,6 @@
 import numpy as np
 
-from scipy.fft import dct, rfft, ifft
+from scipy.fft import dct
 
 from .clustering import MeanShiftClustering
 
@@ -37,16 +37,12 @@ class Preprocess:
         for nId, measurements in matrices.items():
             for mId, m in measurements.items():
                 number_of_samples = m['x'].shape[0]
-                
-                sum_of_x_samples = np.sum(m['x'])
-                sum_of_y_samples = np.sum(m['y'])
-                sum_of_z_samples = np.sum(m['z'])
 
                 # Subtracting the average sum of samples from the collected samples
                 if number_of_samples > 1:
-                    normalized_matrices[nId][mId]['x'] -= sum_of_x_samples / number_of_samples
-                    normalized_matrices[nId][mId]['y'] -= sum_of_y_samples / number_of_samples
-                    normalized_matrices[nId][mId]['z'] -= sum_of_z_samples / number_of_samples
+                    normalized_matrices[nId][mId]['x'] -= np.mean(m['x'])
+                    normalized_matrices[nId][mId]['y'] -= np.mean(m['y'])
+                    normalized_matrices[nId][mId]['z'] -= np.mean(m['z'])
 
         return normalized_matrices
 
