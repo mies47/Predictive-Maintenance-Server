@@ -89,15 +89,10 @@ class Preprocess:
 
         for nId, measurements in average_accelaration.items():
             for mId, m in measurements.items():
-                number_of_samples = m['x'].shape[0]
 
-                average_of_x_accelaration = np.sum(m['x']) / number_of_samples
-                average_of_y_accelaration = np.sum(m['y']) / number_of_samples
-                average_of_z_accelaration = np.sum(m['z']) / number_of_samples
-
-                average_accelaration[nId][mId]['x'] = average_of_x_accelaration
-                average_accelaration[nId][mId]['y'] = average_of_y_accelaration
-                average_accelaration[nId][mId]['z'] = average_of_z_accelaration
+                average_accelaration[nId][mId]['x'] = np.mean(m['x'])
+                average_accelaration[nId][mId]['y'] = np.mean(m['y'])
+                average_accelaration[nId][mId]['z'] = np.mean(m['z'])
 
         return average_accelaration
 
