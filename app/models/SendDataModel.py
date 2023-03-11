@@ -3,6 +3,7 @@ from typing import List
 
 
 class VibrationDataModel(BaseModel):
+    measurementId: str
     time: float
     x: float
     y: float

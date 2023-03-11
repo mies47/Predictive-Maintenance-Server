@@ -17,22 +17,22 @@ class InfluxDB:
         self.query_api = self.client.query_api()
 
 
-    def write_vibration_data(self, measurementId: str, nodeId: str, data: VibrationDataModel):
+    def write_vibration_data(self,nodeId: str, data: VibrationDataModel):
         x_point = Point('vibration_measurement')\
             .tag('nodeId', nodeId)\
-                .tag('measurementId', measurementId)\
+                .tag('measurementId', data.measurementId)\
                     .field('x', data.x)\
                         .time(time=datetime.utcfromtimestamp(data.time))
         
         y_point = Point('vibration_measurement')\
             .tag('nodeId', nodeId)\
-                .tag('measurementId', measurementId)\
+                .tag('measurementId', data.measurementId)\
                     .field('y', data.y)\
                         .time(time=datetime.utcfromtimestamp(data.time))
         
         z_point = Point('vibration_measurement')\
             .tag('nodeId', nodeId)\
-                .tag('measurementId', measurementId)\
+                .tag('measurementId', data.measurementId)\
                     .field('z', data.z)\
                         .time(time=datetime.utcfromtimestamp(data.time))
 
