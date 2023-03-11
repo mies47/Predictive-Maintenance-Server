@@ -90,11 +90,9 @@ async def get_node_data(nodeId: str, admin = Depends(get_current_admin)):
 
 @router.post('/')
 async def send_data(dataList: DataModelList, gateway = Depends(get_current_gateway)):
-    measurementId = f'measurement_{int(time.time())}'
-
     dList = parse_obj_as(DataModelList, dataList)
     for nodeData in dList.data:
         nData = parse_obj_as(DataModel, nodeData)
         for vibrationData in nData.vibrationData:
             vData = parse_obj_as(VibrationDataModel, vibrationData)
-            influx.write_vibration_data(measurementId=measurementId, nodeId=nData.nodeId, data=vData)
+            influx.write_vibration_data(nodeId=nData.nodeId, data=vData)
