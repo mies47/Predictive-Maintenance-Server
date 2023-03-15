@@ -67,10 +67,11 @@ class Preprocess:
 
         for nId, measurements in matrices.items():
             for mId, m in measurements.items():
+                number_of_samples = m['x'].shape[0]
 
-                psd_feature[nId][mId]['x'] = dct(m['x'], type=2, norm='ortho') ** 2
-                psd_feature[nId][mId]['y'] = dct(m['y'], type=2, norm='ortho') ** 2
-                psd_feature[nId][mId]['z'] = dct(m['z'], type=2, norm='ortho') ** 2
+                psd_feature[nId][mId]['x'] = (dct(m['x'], type=2, norm='ortho') ** 2) / number_of_samples
+                psd_feature[nId][mId]['y'] = (dct(m['y'], type=2, norm='ortho') ** 2) / number_of_samples
+                psd_feature[nId][mId]['z'] = (dct(m['z'], type=2, norm='ortho') ** 2) / number_of_samples
 
         return psd_feature
 
@@ -112,8 +113,3 @@ class Preprocess:
 
         # Extracting PSD (Power Spectral Density) feature from normalized data
         psd_feature = self._psd_feature_extraction(matrices=normalized_data)
-
-        for nId, measurements in rms_feature.items():
-            for mId, m in measurements.items():
-
-                print(rms_feature[nId][mId]['x'] ** 2, np.sum(psd_feature[nId][mId]['x']), psd_feature[nId][mId]['x'])
