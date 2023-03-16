@@ -11,7 +11,20 @@ class Preprocess:
 
     def __init__(self, vibration_data: defaultdict(lambda: defaultdict(lambda: [])) = None):
         self.vibration_data = vibration_data
+        self.number_of_total_samples = 0
+        self.number_of_measurements = 0
+        self.number_of_nodes = 0
 
+        if vibration_data:
+            counted_measurements = set()
+            for _, measurements in vibration_data.items():
+                self.number_of_nodes += 1
+                for mId, m in measurements.items():
+                    self.number_of_total_samples += len(m)
+                    
+                    if mId not in counted_measurements:
+                        self.number_of_measurements += 1
+                        counted_measurements.add(mId)
 
     def _create_matrices(self):
         matrices = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))
@@ -98,11 +111,18 @@ class Preprocess:
         return average_accelaration_points
     
 
-    # Outlier detection using mean shift clustering
+    # Returns filtered data after outlier detection process
     def _outlier_detection(self, vibration_measurements: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
        
         # Computing measurements average accelaration for outlier detection
         measurement_average_accelaration = self._compute_measurements_average_accelaration(vibration_measurements=vibration_measurements)
+
+        measurements, measurements_average = list(measurement_average_accelaration.keys()), \
+                                             list(measurement_average_accelaration.values())
+
+        filtered_data = deepcopy(vibration_measurements)
+
+        return filtered_data
 
 
     def start(self):
@@ -111,6 +131,8 @@ class Preprocess:
 
         # Creating matrices from raw data
         matrices = self._create_matrices()
+
+        matrices = self._outlier_detection(vibration_measurements=matrices)
 
         # Normalizing samples to remove gravity effect
         normalized_data = self._normalize_vibration_data(matrices=matrices)
