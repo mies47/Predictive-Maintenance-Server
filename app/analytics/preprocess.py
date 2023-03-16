@@ -82,20 +82,25 @@ class Preprocess:
 
     
     # Using this method to pinpoint outlier sensor data
-    def _compute_average_accelaration(self):
-        if self.vibration_data == None:
-            return
-        
-        average_accelaration = self._create_matrices()
+    def _compute_measurements_average_accelaration(self, vibration_measurements: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+        # Creating a 3-cells vector for each measurement indicating x, y, z means for each measurement
+        average_accelaration_points = defaultdict(lambda: [0.0, 0.0, 0.0])
+        measurements_samples = defaultdict(lambda: 0)
 
-        for nId, measurements in average_accelaration.items():
+        for _, measurements in vibration_measurements.items():
             for mId, m in measurements.items():
+                measurements_samples[mId] += m['x'].shape[0]
 
-                average_accelaration[nId][mId]['x'] = np.mean(m['x'])
-                average_accelaration[nId][mId]['y'] = np.mean(m['y'])
-                average_accelaration[nId][mId]['z'] = np.mean(m['z'])
+                average_accelaration_points[mId][0] += np.sum(m['x'])
+                average_accelaration_points[mId][1] += np.sum(m['y'])
+                average_accelaration_points[mId][2] += np.sum(m['z'])
+        
+        for mId in average_accelaration_points.keys():
+            average_accelaration_points[mId][0] /= measurements_samples[mId]
+            average_accelaration_points[mId][1] /= measurements_samples[mId]
+            average_accelaration_points[mId][2] /= measurements_samples[mId]
 
-        return average_accelaration
+        return average_accelaration_points
 
 
     def start(self):
@@ -104,6 +109,9 @@ class Preprocess:
 
         # Creating matrices from raw data
         matrices = self._create_matrices()
+
+        # Computing measurements average accelaration for outlier detection
+        measurement_average_accelaration = self._compute_measurements_average_accelaration(vibration_measurements=matrices)
 
         # Normalizing samples to remove gravity effect
         normalized_data = self._normalize_vibration_data(matrices=matrices)
