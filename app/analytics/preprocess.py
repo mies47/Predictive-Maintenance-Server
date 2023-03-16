@@ -75,11 +75,6 @@ class Preprocess:
 
         return psd_feature
 
-
-    # Outlier detection using mean shift clustering
-    def _outlier_detection(self, matrices):
-        pass
-
     
     # Using this method to pinpoint outlier sensor data
     def _compute_measurements_average_accelaration(self, vibration_measurements: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
@@ -101,6 +96,13 @@ class Preprocess:
             average_accelaration_points[mId][2] /= measurements_samples[mId]
 
         return average_accelaration_points
+    
+
+    # Outlier detection using mean shift clustering
+    def _outlier_detection(self, vibration_measurements: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+       
+        # Computing measurements average accelaration for outlier detection
+        measurement_average_accelaration = self._compute_measurements_average_accelaration(vibration_measurements=vibration_measurements)
 
 
     def start(self):
@@ -109,9 +111,6 @@ class Preprocess:
 
         # Creating matrices from raw data
         matrices = self._create_matrices()
-
-        # Computing measurements average accelaration for outlier detection
-        measurement_average_accelaration = self._compute_measurements_average_accelaration(vibration_measurements=matrices)
 
         # Normalizing samples to remove gravity effect
         normalized_data = self._normalize_vibration_data(matrices=matrices)
