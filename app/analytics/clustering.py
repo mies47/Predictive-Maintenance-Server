@@ -8,10 +8,16 @@ class MeanShiftClustering:
 
     def __init__(self, vibration_data = None, measurements_average_accelaration = None):
         self.vibration_data = vibration_data
-        self.measurements_id = list(measurements_average_accelaration.keys())
-        self.measurements_averages = list(measurements_average_accelaration.values())
+        
+        self.measurements_id = None
+        self.measurements_averages = None
+        
         self.model = MeanShift()
         self._model_fitted = False
+
+        if measurements_average_accelaration is not None:
+            self.measurements_id = list(measurements_average_accelaration.keys())
+            self.measurements_averages = list(measurements_average_accelaration.values())
 
 
     def _fit(self):

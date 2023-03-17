@@ -117,7 +117,7 @@ class Preprocess:
         # Computing measurements average accelaration for outlier detection
         measurement_average_accelaration = self._compute_measurements_average_accelaration(vibration_measurements=vibration_data)
         
-        ms = MeanShiftClustering(vibration_data=vibration_data, measurements_average_accelaration=measurement_average_accelaration)
+        ms = MeanShiftClustering(vibration_data=vibration_data, measurements_average_accelaration=None)
 
         return ms.outlier_detection()
 
