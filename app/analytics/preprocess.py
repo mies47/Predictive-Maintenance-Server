@@ -112,17 +112,14 @@ class Preprocess:
     
 
     # Returns filtered data after outlier detection process
-    def _outlier_detection(self, vibration_measurements: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+    def _outlier_detection(self, vibration_data: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
        
         # Computing measurements average accelaration for outlier detection
-        measurement_average_accelaration = self._compute_measurements_average_accelaration(vibration_measurements=vibration_measurements)
+        measurement_average_accelaration = self._compute_measurements_average_accelaration(vibration_measurements=vibration_data)
+        
+        ms = MeanShiftClustering(vibration_data=vibration_data, measurements_average_accelaration=measurement_average_accelaration)
 
-        measurements, measurements_average = list(measurement_average_accelaration.keys()), \
-                                             list(measurement_average_accelaration.values())
-
-        filtered_data = deepcopy(vibration_measurements)
-
-        return filtered_data
+        return ms.outlier_detection()
 
 
     def start(self):
@@ -132,7 +129,11 @@ class Preprocess:
         # Creating matrices from raw data
         matrices = self._create_matrices()
 
-        matrices = self._outlier_detection(vibration_measurements=matrices)
+        # TODO: Set a threshold for doing outliter detection process
+        if False:
+            print(matrices, '\n\n')
+            matrices = self._outlier_detection(vibration_data=matrices)
+            print(matrices)
 
         # Normalizing samples to remove gravity effect
         normalized_data = self._normalize_vibration_data(matrices=matrices)
