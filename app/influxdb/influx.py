@@ -80,10 +80,12 @@ class InfluxDB:
         return results
 
 
-    def get_all_measurements_id(self):
+    def get_all_measurements_id(self, nodeId: str = None):
+        filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
         query = f'from(bucket:"{INFLUXDB_BUCKET}")\
         |> range(start: 0)\
         |> filter(fn:(r) => r._measurement == "vibration_measurement")\
+        {filter_by_node if nodeId is not None else ""}\
         |> keep(columns: ["measurementId"])\
         |> distinct(column: "measurementId")'
 

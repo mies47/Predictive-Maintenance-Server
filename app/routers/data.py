@@ -75,7 +75,6 @@ async def get_current_gateway(token: HTTPAuthorizationCredentials = Depends(auth
 
 @router.get('/allData')
 async def get_all_data(admin = Depends(get_current_admin)):
-    print('This is the end')
     result = influx.get_vibration_data()
 
     return JSONResponse(content=result, status_code=status.HTTP_200_OK)
