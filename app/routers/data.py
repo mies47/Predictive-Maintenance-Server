@@ -11,7 +11,6 @@ from ..auth.handler import decodeJWT
 from pydantic import parse_obj_as
 
 import pandas as pd
-import time
 
 router = APIRouter(
     prefix='/data',
@@ -74,21 +73,36 @@ async def get_current_gateway(token: HTTPAuthorizationCredentials = Depends(auth
     return gateway
 
 
-@router.get('/')
+@router.get('/allData')
 async def get_all_data(admin = Depends(get_current_admin)):
+    print('This is the end')
     result = influx.get_vibration_data()
 
     return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
 
-@router.get('/{nodeId}')
+@router.get('/nodeData/{nodeId}')
 async def get_node_data(nodeId: str, admin = Depends(get_current_admin)):
     result = influx.get_vibration_data(nodeId=nodeId)
 
     return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
 
-@router.post('/')
+@router.get('/allNodes')
+async def get_nodes_id(admin = Depends(get_current_admin)):
+    result = influx.get_all_nodes_id()
+
+    return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+
+
+@router.get('/allMeasurements')
+async def get_measurments_id(admin = Depends(get_current_admin)):
+    result = influx.get_all_measurements_id()
+
+    return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+
+
+@router.post('')
 async def send_data(dataList: DataModelList, gateway = Depends(get_current_gateway)):
     dList = parse_obj_as(DataModelList, dataList)
     for nodeData in dList.data:
