@@ -50,14 +50,17 @@ async def get_current_admin(token: HTTPAuthorizationCredentials = Depends(auth_s
 @router.post('/preprocess')
 async def preprocess_all_data(admin = Depends(get_current_admin)):
     vibration_data = influx.get_vibration_data()
+    nodes_ids = influx.get_all_nodes_id()
+    measurements_ids = influx.get_all_measurements_id()
 
-    preprocessor = Preprocess(vibration_data=vibration_data)
+    preprocessor = Preprocess(vibration_data=vibration_data, nodes_ids=nodes_ids, measurements_ids=measurements_ids)
     preprocessor.start()
 
 
 @router.post('/preprocess/{nodeId}')
 async def preprocess_node_data(nodeId: str, admin = Depends(get_current_admin)):
     vibration_data = influx.get_vibration_data(nodeId=nodeId)
+    measurements_ids = influx.get_all_measurements_id(nodeId=nodeId)
     
-    preprocessor = Preprocess(vibration_data=vibration_data)
+    preprocessor = Preprocess(vibration_data=vibration_data, nodes_ids=[nodeId], measurements_ids=measurements_ids)
     preprocessor.start()

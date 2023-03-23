@@ -9,22 +9,15 @@ from copy import deepcopy
 
 class Preprocess:
 
-    def __init__(self, vibration_data: defaultdict(lambda: defaultdict(lambda: [])) = None):
-        self.vibration_data = vibration_data
-        self.number_of_total_samples = 0
-        self.number_of_measurements = 0
-        self.number_of_nodes = 0
+    def __init__(self,
+                 vibration_data: defaultdict(lambda: defaultdict(lambda: []),) = None,
+                 nodes_ids = None,
+                 measurements_ids = None):
 
-        if vibration_data:
-            counted_measurements = set()
-            for _, measurements in vibration_data.items():
-                self.number_of_nodes += 1
-                for mId, m in measurements.items():
-                    self.number_of_total_samples += len(m)
-                    
-                    if mId not in counted_measurements:
-                        self.number_of_measurements += 1
-                        counted_measurements.add(mId)
+        self.vibration_data = vibration_data
+        self.nodes_ids = nodes_ids
+        self.measurements_ids = measurements_ids
+        
 
     def _create_matrices(self):
         matrices = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))
