@@ -50,16 +50,46 @@ class InfluxDB:
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
         |> yield()'
 
-        result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
-        result = json.loads(result.to_json(orient='records'))
+        query_result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
+        query_result = json.loads(query_result.to_json(orient='records'))
 
         results = defaultdict(lambda: defaultdict(lambda: []))
-        for r in result:
+        for r in query_result:
             results[r['nodeId']][r['measurementId']].append({
                 'x': r['x'],
                 'y': r['y'],
                 'z': r['z'],
                 'time': r['_time']
             })
+
+        return results
+    
+
+    def get_all_nodes_id(self):
+        query = f'from(bucket:"{INFLUXDB_BUCKET}")\
+        |> range(start: 0)\
+        |> filter(fn:(r) => r._measurement == "vibration_measurement")\
+        |> keep(columns: ["nodeId"])\
+        |> distinct(column: "nodeId")'
+
+        query_result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
+        query_result = json.loads(query_result.to_json(orient='records'))
+
+        results = [r['nodeId'] for r in query_result]
+
+        return results
+
+
+    def get_all_measurements_id(self):
+        query = f'from(bucket:"{INFLUXDB_BUCKET}")\
+        |> range(start: 0)\
+        |> filter(fn:(r) => r._measurement == "vibration_measurement")\
+        |> keep(columns: ["measurementId"])\
+        |> distinct(column: "measurementId")'
+
+        query_result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
+        query_result = json.loads(query_result.to_json(orient='records'))
+
+        results = [r['measurementId'] for r in query_result]
 
         return results
