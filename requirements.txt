@@ -9,4 +9,3 @@ python-dotenv==0.21.1
 pandas==1.5.3
 alembic==1.9.4
 scikit-learn==1.2.1
-matplotlib==3.7.0
