@@ -7,6 +7,8 @@ from .clustering import MeanShiftClustering
 from collections import defaultdict
 from copy import deepcopy
 
+from ..utils.env_vars import HANN_WINDOW_SIZE, MAXIMUM_NUMBER_OF_PEAKS
+
 class Preprocess:
 
     def __init__(self,
@@ -113,6 +115,14 @@ class Preprocess:
         ms = MeanShiftClustering(vibration_data=vibration_data, measurements_average_accelaration=None)
 
         return ms.outlier_detection()
+    
+
+    def _hann_window(self, n):
+        return 0.5 * (1 - np.cos((2 * np.pi * n) / (HANN_WINDOW_SIZE - 1)))
+
+
+    def _harmonic_peak_feature_extraction(self):
+        pass
 
 
     def start(self):
@@ -136,3 +146,6 @@ class Preprocess:
 
         # Extracting PSD (Power Spectral Density) feature from normalized data
         psd_feature = self._psd_feature_extraction(matrices=normalized_data)
+
+        # Extracting harmonic peak feature
+        harmonic_peak_feature = self._harmonic_peak_feature_extraction()
