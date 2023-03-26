@@ -7,7 +7,7 @@ from .clustering import MeanShiftClustering
 from collections import defaultdict
 from copy import deepcopy
 
-from ..utils.env_vars import HANN_WINDOW_SIZE, MAXIMUM_NUMBER_OF_PEAKS
+from ..utils.env_vars import HANN_WINDOW_SIZE, MAXIMUM_NUMBER_OF_PEAKS, SAMPLING_RATE
 
 class Preprocess:
 
@@ -117,10 +117,12 @@ class Preprocess:
         return ms.outlier_detection()
     
 
+    # This function is used to smooth PSD features using convolution
     def _hann_window(self, n):
         return 0.5 * (1 - np.cos((2 * np.pi * n) / (HANN_WINDOW_SIZE - 1)))
 
 
+    # Extracting harmonic peak feature from PSD feature after smoothing using hann window
     def _harmonic_peak_feature_extraction(self):
         pass
 
