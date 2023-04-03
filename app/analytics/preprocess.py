@@ -134,7 +134,7 @@ class Preprocess:
         # Creating matrices from raw data
         matrices = self._create_matrices()
 
-        # TODO: Set a threshold for doing outliter detection process
+        # TODO: Set a threshold for including outlier detection process
         if False:
             print(matrices, '\n\n')
             matrices = self._outlier_detection(vibration_data=matrices)
