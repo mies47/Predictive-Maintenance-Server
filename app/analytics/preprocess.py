@@ -7,12 +7,12 @@ from .clustering import MeanShiftClustering
 from collections import defaultdict
 from copy import deepcopy
 
-from ..utils.env_vars import HANN_WINDOW_SIZE, MAXIMUM_NUMBER_OF_PEAKS, SAMPLING_RATE
+from ..utils.env_vars import HANN_WINDOW_SIZE
 
 class Preprocess:
 
     def __init__(self,
-                 vibration_data: defaultdict(lambda: defaultdict(lambda: []),) = None,
+                 vibration_data: defaultdict(lambda: defaultdict(lambda: [])) = None,
                  nodes_ids = None,
                  measurements_ids = None):
 
