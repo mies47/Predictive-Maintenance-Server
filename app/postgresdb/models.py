@@ -1,4 +1,3 @@
-from sqlalchemy.sql.expression import null
 from sqlalchemy import String, Integer, Column
 
 from .postgres import Base
@@ -13,7 +12,7 @@ class Admin(Base):
 
 
     def __repr__(self):
-        return f"<Admin email={self.email} password={self.password}>"
+        return f'<Admin email={self.email} password={self.password}>'
 
 
 class Gateway(Base):
@@ -24,4 +23,15 @@ class Gateway(Base):
 
 
     def __repr__(self):
-        return f"<Gateway mac={self.mac} password={self.password}>"
+        return f'<Gateway mac={self.mac} password={self.password}>'
+    
+
+class MachineClass(Base):
+    __tablename__ = 'machineClasses'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    string = Column(String(2), nullable=False, unique=True)
+    description = Column(String(255), nullable=False, unique=True)
+
+
+    def __repr__(self):
+        return f'<Machine Class {self.string}: {self.description}>'

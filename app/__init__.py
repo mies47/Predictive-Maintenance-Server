@@ -1,13 +1,23 @@
 from fastapi import FastAPI
 
 from .utils.env_vars import API_PREFIX
+from .utils.constants import MACHINE_LABELS
 
 
 def create_database():
     from .postgresdb.postgres import Base, engine
-    from .postgresdb.models import Admin, Gateway
+    from .postgresdb.postgres import SessionLocal
+    from .postgresdb.models import Admin, Gateway, MachineClass
 
     Base.metadata.create_all(engine)
+
+    db = SessionLocal()
+
+    if db.query(MachineClass).first() is None:
+        labels = [MachineClass(string=string, description=description) for string, description in MACHINE_LABELS.items()]
+    
+        db.add_all(labels)
+        db.commit()
 
 
 def initialize_server():
