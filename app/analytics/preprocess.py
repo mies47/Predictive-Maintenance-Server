@@ -124,7 +124,7 @@ class Preprocess:
         '''Extracting harmonic peak feature from PSD feature after smoothing using hann window'''
 
         # This function is used to smooth PSD features using convolution
-        hann_window = lambda n: 0.5 * (1 - np.cos((2 * np.pi * n) / (HANN_WINDOW_SIZE - 1)))
+        hann_window = np.hanning(HANN_WINDOW_SIZE)
 
 
     def start(self):
