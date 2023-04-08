@@ -55,8 +55,9 @@ class Preprocess:
         return normalized_matrices
 
     
-    # Root Mean Square feature
     def _rms_feature_extraction(self, matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+        '''Root Mean Square feature'''
+
         rms_feature = deepcopy(matrices)
 
         for nId, measurements in matrices.items():
@@ -69,8 +70,9 @@ class Preprocess:
         return rms_feature
 
 
-    # Power Spectral Density feature
     def _psd_feature_extraction(self, matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+        '''Power Spectral Density feature'''
+
         psd_feature = deepcopy(matrices)
 
         for nId, measurements in matrices.items():
@@ -83,9 +85,10 @@ class Preprocess:
 
         return psd_feature
 
-    
-    # Using this method to pinpoint outlier sensor data
+
     def _compute_measurements_average_accelaration(self, vibration_measurements: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+        '''Using this method to pinpoint outlier sensor data'''
+        
         # Creating a 3-cells vector for each measurement indicating x, y, z means for each measurement
         average_accelaration_points = defaultdict(lambda: [0.0, 0.0, 0.0])
         measurements_samples = defaultdict(lambda: 0)
@@ -106,28 +109,26 @@ class Preprocess:
         return average_accelaration_points
     
 
-    # Returns filtered data after outlier detection process
     def _outlier_detection(self, vibration_data: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
-       
+        '''Returns filtered data after outlier detection process'''
+
         # Computing measurements average accelaration for outlier detection
         measurement_average_accelaration = self._compute_measurements_average_accelaration(vibration_measurements=vibration_data)
         
         ms = MeanShiftClustering(vibration_data=vibration_data, measurements_average_accelaration=measurement_average_accelaration)
 
         return ms.outlier_detection()
-    
-
-    # This function is used to smooth PSD features using convolution
-    def _hann_window(self, n):
-        return 0.5 * (1 - np.cos((2 * np.pi * n) / (HANN_WINDOW_SIZE - 1)))
 
 
-    # Extracting harmonic peak feature from PSD feature after smoothing using hann window
-    def _harmonic_peak_feature_extraction(self):
-        pass
+    def _harmonic_peak_feature_extraction(self, psd: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+        '''Extracting harmonic peak feature from PSD feature after smoothing using hann window'''
+
+        # This function is used to smooth PSD features using convolution
+        hann_window = lambda n: 0.5 * (1 - np.cos((2 * np.pi * n) / (HANN_WINDOW_SIZE - 1)))
 
 
     def start(self):
+
         if self.vibration_data == None:
             return
 
@@ -150,4 +151,4 @@ class Preprocess:
         psd_feature = self._psd_feature_extraction(matrices=normalized_data)
 
         # Extracting harmonic peak feature
-        harmonic_peak_feature = self._harmonic_peak_feature_extraction()
+        harmonic_peak_feature = self._harmonic_peak_feature_extraction(psd=psd_feature)
