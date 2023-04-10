@@ -22,6 +22,8 @@ class Preprocess:
         
 
     def _create_matrices(self):
+        '''This function creates matrices from the raw data for preprocessing'''
+
         matrices = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))
 
         for nId, measurements in self.vibration_data.items():
@@ -40,6 +42,8 @@ class Preprocess:
 
 
     def _normalize_vibration_data(self, matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+        '''Normalized the input data to remove gravity effect'''
+
         normalized_matrices = deepcopy(matrices)
 
         for nId, measurements in matrices.items():
