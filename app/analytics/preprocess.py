@@ -1,13 +1,13 @@
 import numpy as np
 
-from scipy.fft import dct
+from scipy.fft import dct, fftfreq
 
 from .clustering import MeanShiftClustering
 
 from collections import defaultdict
 from copy import deepcopy
 
-from ..utils.env_vars import HANN_WINDOW_SIZE
+from ..utils.env_vars import HANN_WINDOW_SIZE, SAMPLING_RATE
 
 class Preprocess:
 
@@ -77,15 +77,20 @@ class Preprocess:
     def _psd_feature_extraction(self, matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
         '''Power Spectral Density feature'''
 
-        psd_feature = deepcopy(matrices)
+        # Each tuple consists of (frequency, psd)
+        psd_feature = defaultdict(lambda: defaultdict(lambda: tuple()))
 
         for nId, measurements in matrices.items():
             for mId, m in measurements.items():
                 number_of_samples = m['x'].shape[0]
 
-                psd_feature[nId][mId]['x'] = (dct(m['x'], type=2, norm='ortho') ** 2) / number_of_samples
-                psd_feature[nId][mId]['y'] = (dct(m['y'], type=2, norm='ortho') ** 2) / number_of_samples
-                psd_feature[nId][mId]['z'] = (dct(m['z'], type=2, norm='ortho') ** 2) / number_of_samples
+                x_psd_feature = (dct(m['x'], type=2, norm='ortho') ** 2) / number_of_samples
+                y_psd_feature = (dct(m['y'], type=2, norm='ortho') ** 2) / number_of_samples
+                z_psd_feature = (dct(m['z'], type=2, norm='ortho') ** 2) / number_of_samples
+
+                freqs = fftfreq(number_of_samples, d=1/SAMPLING_RATE)
+
+                psd_feature[nId][mId] = (freqs, x_psd_feature + y_psd_feature + z_psd_feature)
 
         return psd_feature
 
@@ -122,9 +127,20 @@ class Preprocess:
         ms = MeanShiftClustering(vibration_data=vibration_data, measurements_average_accelaration=measurement_average_accelaration)
 
         return ms.outlier_detection()
+    
+
+    def _check_parseval_theorem(self, psd, rms):
+        '''A simple function to check the correctness of feature extraction'''
+
+        for nId, measurements in psd.items():
+            for mId, measurement in measurements.items():
+                print(
+                    rms[nId][mId]['x'] ** 2 + rms[nId][mId]['y'] ** 2 + rms[nId][mId]['z'] ** 2,
+                    np.sum(psd[nId][mId][1])
+                )
 
 
-    def _harmonic_peak_feature_extraction(self, psd: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+    def _harmonic_peak_feature_extraction(self, psd: defaultdict(lambda: defaultdict())):
         '''Extracting harmonic peak feature from PSD feature after smoothing using hann window'''
 
         # This function is used to smooth PSD features using convolution
