@@ -7,7 +7,7 @@ from .clustering import MeanShiftClustering
 from collections import defaultdict
 from copy import deepcopy
 
-from ..utils.env_vars import HANN_WINDOW_SIZE, SAMPLING_RATE
+from ..utils.constants import SMOOTHING_WINDOW_SIZE, SAMPLING_RATE
 
 class Preprocess:
 
@@ -138,20 +138,31 @@ class Preprocess:
                 )
 
 
+    def _smooth(self, x, method='hanning'):
+        if x is None:
+            raise ValueError('No Input Matrix!')
+
+        if method not in ('hanning'):
+            raise NotImplementedError('The requested smoothing window is not implemented')
+
+        smoothing_window = eval(f'np.{method}({SMOOTHING_WINDOW_SIZE})')
+    
+        return np.convolve(smoothing_window, x, mode='valid')
+
+
     def _harmonic_peak_feature_extraction(self, psd: defaultdict(lambda: defaultdict())):
         '''Extracting harmonic peak feature from PSD feature after smoothing using hann window'''
-
-        # This function is used to smooth PSD features using convolution
-        hann_window = np.hanning(HANN_WINDOW_SIZE)
 
         smoothed_psd = deepcopy(psd)
 
         for nId, measurements in smoothed_psd.items():
             for mId, psd_feature in measurements.items():
-                smoothed_feature = np.convolve(hann_window, psd_feature, mode='valid')
+                smoothed_feature = self._smooth(x=psd_feature, method='hanning')
                 freqs = fftfreq(smoothed_feature.shape[0], d=1/SAMPLING_RATE)
 
                 smoothed_psd[nId][mId] = (freqs, smoothed_feature)
+
+        print(smoothed_psd)
 
         return smoothed_psd
 

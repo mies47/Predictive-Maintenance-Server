@@ -4,3 +4,9 @@ MACHINE_LABELS = {
     'C3': 'known as Zone C, Unsatisfactory for long term continuous operation',
     'C4': 'known as Zone D, Vibration of sufﬁcient severity to cause damage to machine'
 }
+
+# Harmonic Peak Feature Extraction vars
+SMOOTHING_WINDOW_SIZE = 16
+MAXIMUM_NUMBER_OF_PEAKS = 20
+
+SAMPLING_RATE = 1024
