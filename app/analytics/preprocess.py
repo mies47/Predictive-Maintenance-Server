@@ -88,9 +88,7 @@ class Preprocess:
                 y_psd_feature = (dct(m['y'], type=2, norm='ortho') ** 2) / number_of_samples
                 z_psd_feature = (dct(m['z'], type=2, norm='ortho') ** 2) / number_of_samples
 
-                freqs = fftfreq(number_of_samples, d=1/SAMPLING_RATE)
-
-                psd_feature[nId][mId] = (freqs, x_psd_feature + y_psd_feature + z_psd_feature)
+                psd_feature[nId][mId] = x_psd_feature + y_psd_feature + z_psd_feature
 
         return psd_feature
 
@@ -145,6 +143,17 @@ class Preprocess:
 
         # This function is used to smooth PSD features using convolution
         hann_window = np.hanning(HANN_WINDOW_SIZE)
+
+        smoothed_psd = deepcopy(psd)
+
+        for nId, measurements in smoothed_psd.items():
+            for mId, psd_feature in measurements.items():
+                smoothed_feature = np.convolve(hann_window, psd_feature, mode='valid')
+                freqs = fftfreq(smoothed_feature.shape[0], d=1/SAMPLING_RATE)
+
+                smoothed_psd[nId][mId] = (freqs, smoothed_feature)
+
+        return smoothed_psd
 
 
     def start(self):
