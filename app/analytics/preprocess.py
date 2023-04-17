@@ -1,6 +1,7 @@
 import numpy as np
 
 from scipy.fft import dct, fftfreq
+from scipy.signal import find_peaks, peak_prominences
 
 from .clustering import MeanShiftClustering
 
@@ -147,24 +148,29 @@ class Preprocess:
 
         smoothing_window = eval(f'np.{method}({SMOOTHING_WINDOW_SIZE})')
     
-        return np.convolve(smoothing_window, x, mode='valid')
+        return np.convolve(smoothing_window, x, mode = 'valid')
+    
+
+    def _find_peaks(self, x):
+        freqs = fftfreq(x.shape[0], d = 1/SAMPLING_RATE)
+        
+        return x, freqs
 
 
     def _harmonic_peak_feature_extraction(self, psd: defaultdict(lambda: defaultdict())):
         '''Extracting harmonic peak feature from PSD feature after smoothing using hann window'''
 
-        smoothed_psd = deepcopy(psd)
+        harmonic_peaks = deepcopy(psd)
 
-        for nId, measurements in smoothed_psd.items():
+        for nId, measurements in harmonic_peaks.items():
             for mId, psd_feature in measurements.items():
                 smoothed_feature = self._smooth(x=psd_feature, method='hanning')
-                freqs = fftfreq(smoothed_feature.shape[0], d=1/SAMPLING_RATE)
 
-                smoothed_psd[nId][mId] = (freqs, smoothed_feature)
+                peaks, freqs = self._find_peaks(smoothed_feature)
 
-        print(smoothed_psd)
+                harmonic_peaks[nId][mId] = (freqs, peaks)
 
-        return smoothed_psd
+        return harmonic_peaks
 
 
     def start(self):
