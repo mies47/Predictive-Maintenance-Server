@@ -147,8 +147,10 @@ class Preprocess:
             raise NotImplementedError('The requested smoothing window is not implemented')
 
         smoothing_window = eval(f'np.{method}({SMOOTHING_WINDOW_SIZE})')
+
+        smoothed = np.convolve(smoothing_window, x, mode = 'valid')
     
-        return np.convolve(smoothing_window, x, mode = 'valid')
+        return smoothed
     
 
     def _find_peaks(self, x):
