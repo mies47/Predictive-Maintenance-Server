@@ -5,12 +5,6 @@ from datetime import datetime, timedelta
 from ..utils.env_vars import JWT_SECRET, JWT_EXPIRES_IN_MINUTES, JWT_ALGORITHM, HASH_ALGORITHM
 
 
-def token_response(token: str):
-    return {
-        'access_token': token
-    }
-
-
 def signJWT(key: str, value: str) -> Dict[str, str]:
     payload = {
         key: value,
@@ -18,7 +12,7 @@ def signJWT(key: str, value: str) -> Dict[str, str]:
     }
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-    return token_response(token)
+    return token
 
 
 def decodeJWT(token: str) -> dict:
