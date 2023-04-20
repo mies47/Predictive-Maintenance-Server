@@ -2,7 +2,7 @@ import jwt
 from typing import Dict
 from datetime import datetime, timedelta
 
-from ..utils.env_vars import JWT_SECRET, JWT_EXPIRES_IN_MINUTES, JWT_ALGORITHM, HASH_ALGORITHM
+from ..utils.env_vars import JWT_SECRET, JWT_EXPIRES_IN_MINUTES, JWT_ALGORITHM
 
 
 def signJWT(key: str, value: str) -> Dict[str, str]:
