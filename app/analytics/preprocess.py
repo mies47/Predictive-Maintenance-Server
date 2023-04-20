@@ -8,7 +8,7 @@ from .clustering import MeanShiftClustering
 from collections import defaultdict
 from copy import deepcopy
 
-from ..utils.constants import SMOOTHING_WINDOW_SIZE, SAMPLING_RATE
+from ..utils.constants import SMOOTHING_WINDOW_SIZE, SAMPLING_RATE, MAXIMUM_NUMBER_OF_PEAKS
 
 class Preprocess:
 
@@ -34,7 +34,7 @@ class Preprocess:
                     matrices[nId][mId]['y'].append(sample['y'])
                     matrices[nId][mId]['z'].append(sample['z'])
                 
-                # Converting collected smaples to numpy arrays
+                # Converting collected samples to numpy arrays
                 matrices[nId][mId]['x'] = np.array(matrices[nId][mId]['x'], dtype=np.float32)
                 matrices[nId][mId]['y'] = np.array(matrices[nId][mId]['y'], dtype=np.float32)
                 matrices[nId][mId]['z'] = np.array(matrices[nId][mId]['z'], dtype=np.float32)
@@ -78,8 +78,7 @@ class Preprocess:
     def _psd_feature_extraction(self, matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
         '''Power Spectral Density feature'''
 
-        # Each tuple consists of (frequency, psd)
-        psd_feature = defaultdict(lambda: defaultdict(lambda: tuple()))
+        psd_feature = defaultdict(lambda: defaultdict(lambda: 0))
 
         for nId, measurements in matrices.items():
             for mId, m in measurements.items():
@@ -155,8 +154,16 @@ class Preprocess:
 
     def _find_peaks(self, x):
         freqs = fftfreq(x.shape[0], d = 1/SAMPLING_RATE)
-        
-        return x, freqs
+
+        peaks_index, _ = find_peaks(x)
+
+        harmonic_peak_feature = [(freqs[i], x[i]) for i in peaks_index]
+
+        harmonic_peak_feature = sorted(harmonic_peak_feature, key=lambda t: t[1], reverse=True)
+
+        harmonic_peak_feature = harmonic_peak_feature[:MAXIMUM_NUMBER_OF_PEAKS]
+
+        return harmonic_peak_feature
 
 
     def _harmonic_peak_feature_extraction(self, psd: defaultdict(lambda: defaultdict())):
@@ -168,9 +175,7 @@ class Preprocess:
             for mId, psd_feature in measurements.items():
                 smoothed_feature = self._smooth(x=psd_feature, method='hanning')
 
-                peaks, freqs = self._find_peaks(smoothed_feature)
-
-                harmonic_peaks[nId][mId] = (freqs, peaks)
+                harmonic_peaks[nId][mId] = self._find_peaks(smoothed_feature)
 
         return harmonic_peaks
 

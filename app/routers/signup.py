@@ -5,7 +5,8 @@ from werkzeug.security import generate_password_hash
 from ..models.CredentialsModel import AdminSignupModel, GatewaySignupModel
 from ..postgresdb.postgres import SessionLocal
 from ..postgresdb.models import Gateway, Admin
-from ..auth.handler import signJWT, HASH_ALGORITHM
+from ..auth.handler import signJWT
+from ..utils.env_vars import HASH_ALGORITHM
 
 
 router = APIRouter(
