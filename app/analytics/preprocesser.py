@@ -151,9 +151,7 @@ class Preprocesser:
         peaks_index, _ = find_peaks(x)
 
         harmonic_peak_feature = [(freqs[i], x[i]) for i in peaks_index]
-
         harmonic_peak_feature = sorted(harmonic_peak_feature, key=lambda t: t[1], reverse=True)
-
         harmonic_peak_feature = harmonic_peak_feature[:MAXIMUM_NUMBER_OF_PEAKS]
 
         return harmonic_peak_feature
