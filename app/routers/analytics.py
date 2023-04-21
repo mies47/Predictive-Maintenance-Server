@@ -6,7 +6,8 @@ from ..influxdb.influx import InfluxDB
 from ..postgresdb.postgres import SessionLocal
 from ..postgresdb.models import Admin
 from ..auth.handler import decodeJWT
-from ..analytics.preprocess import Preprocess
+from ..analytics.transformer import Transformer
+from ..analytics.preprocesser import Preprocesser
 
 
 router = APIRouter(
@@ -53,14 +54,24 @@ async def preprocess_all_data(admin = Depends(get_current_admin)):
     nodes_ids = influx.get_all_nodes_id()
     measurements_ids = influx.get_all_measurements_id()
 
-    preprocessor = Preprocess(vibration_data=vibration_data, nodes_ids=nodes_ids, measurements_ids=measurements_ids)
-    preprocessor.start()
+    transformer = Transformer(vibration_data=vibration_data)
+    matrices = transformer.get_matrices()
+
+    preprocessor = Preprocesser(matrices=matrices, nodes_ids=nodes_ids, measurements_ids=measurements_ids)  
+    rms_feature = preprocessor.rms_feature_extraction()
+    psd_feature = preprocessor.psd_feature_extraction()
+    harmonic_peak_feature = preprocessor.harmonic_peak_feature_extraction()
 
 
 @router.post('/preprocess/{nodeId}')
 async def preprocess_node_data(nodeId: str, admin = Depends(get_current_admin)):
     vibration_data = influx.get_vibration_data(nodeId=nodeId)
     measurements_ids = influx.get_all_measurements_id(nodeId=nodeId)
-    
-    preprocessor = Preprocess(vibration_data=vibration_data, nodes_ids=[nodeId], measurements_ids=measurements_ids)
-    preprocessor.start()
+
+    transformer = Transformer(vibration_data=vibration_data)
+    matrices = transformer.get_matrices()
+
+    preprocessor = Preprocesser(matrices=matrices, nodes_ids=[nodeId], measurements_ids=measurements_ids)
+    rms_feature = preprocessor.rms_feature_extraction()
+    psd_feature = preprocessor.psd_feature_extraction()
+    harmonic_peak_feature = preprocessor.harmonic_peak_feature_extraction()
