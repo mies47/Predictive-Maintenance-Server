@@ -1,7 +1,7 @@
 import numpy as np
 
 from scipy.fft import dct, fftfreq
-from scipy.signal import find_peaks, peak_prominences
+from scipy.signal import find_peaks
 
 from .clustering import MeanShiftClustering
 
@@ -10,44 +10,35 @@ from copy import deepcopy
 
 from ..utils.constants import SMOOTHING_WINDOW_SIZE, SAMPLING_RATE, MAXIMUM_NUMBER_OF_PEAKS
 
-class Preprocess:
+class Preprocesser:
 
     def __init__(self,
-                 vibration_data: defaultdict(lambda: defaultdict(lambda: [])) = None,
+                 matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: []))) = None,
                  nodes_ids = None,
                  measurements_ids = None):
 
-        self.vibration_data = vibration_data
+        self.matrices = matrices
         self.nodes_ids = nodes_ids
         self.measurements_ids = measurements_ids
-        
 
-    def _create_matrices(self):
-        '''This function creates matrices from the raw data for preprocessing'''
+        # TODO: Set a threshold for including outlier detection process
+        if False:
+            print(matrices, '\n\n')
+            self.matrices = self._outlier_detection(vibration_data=matrices)
+            print(matrices)
 
-        matrices = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))
-
-        for nId, measurements in self.vibration_data.items():
-            for mId, m in measurements.items():
-                for sample in m:
-                    matrices[nId][mId]['x'].append(sample['x'])
-                    matrices[nId][mId]['y'].append(sample['y'])
-                    matrices[nId][mId]['z'].append(sample['z'])
-                
-                # Converting collected samples to numpy arrays
-                matrices[nId][mId]['x'] = np.array(matrices[nId][mId]['x'], dtype=np.float32)
-                matrices[nId][mId]['y'] = np.array(matrices[nId][mId]['y'], dtype=np.float32)
-                matrices[nId][mId]['z'] = np.array(matrices[nId][mId]['z'], dtype=np.float32)
-
-        return matrices
+        # Normalizing samples to remove gravity effect
+        self.normalized_data = self._normalize_vibration_data()
 
 
-    def _normalize_vibration_data(self, matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+    def _normalize_vibration_data(self):
         '''Normalized the input data to remove gravity effect'''
+        if self.matrices is None:
+            raise ValueError('Matrices are not created!')
 
-        normalized_matrices = deepcopy(matrices)
+        normalized_matrices = deepcopy(self.matrices)
 
-        for nId, measurements in matrices.items():
+        for nId, measurements in normalized_matrices.items():
             for mId, m in measurements.items():
                 number_of_samples = m['x'].shape[0]
 
@@ -60,12 +51,12 @@ class Preprocess:
         return normalized_matrices
 
     
-    def _rms_feature_extraction(self, matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+    def rms_feature_extraction(self):
         '''Root Mean Square feature'''
 
-        rms_feature = deepcopy(matrices)
+        rms_feature = deepcopy(self.normalized_data)
 
-        for nId, measurements in matrices.items():
+        for nId, measurements in rms_feature.items():
             for mId, m in measurements.items():
 
                 rms_feature[nId][mId]['x'] = np.sqrt(np.mean(np.absolute(m['x']) ** 2))
@@ -75,12 +66,12 @@ class Preprocess:
         return rms_feature
 
 
-    def _psd_feature_extraction(self, matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+    def psd_feature_extraction(self):
         '''Power Spectral Density feature'''
 
         psd_feature = defaultdict(lambda: defaultdict(lambda: 0))
 
-        for nId, measurements in matrices.items():
+        for nId, measurements in self.normalized_data.items():
             for mId, m in measurements.items():
                 number_of_samples = m['x'].shape[0]
 
@@ -153,6 +144,8 @@ class Preprocess:
     
 
     def _find_peaks(self, x):
+        '''Returning the most dominant peaks and corresponding frequencies of a specific signal'''
+        
         freqs = fftfreq(x.shape[0], d = 1/SAMPLING_RATE)
 
         peaks_index, _ = find_peaks(x)
@@ -166,10 +159,10 @@ class Preprocess:
         return harmonic_peak_feature
 
 
-    def _harmonic_peak_feature_extraction(self, psd: defaultdict(lambda: defaultdict())):
+    def harmonic_peak_feature_extraction(self):
         '''Extracting harmonic peak feature from PSD feature after smoothing using hann window'''
 
-        harmonic_peaks = deepcopy(psd)
+        harmonic_peaks = self.psd_feature_extraction()
 
         for nId, measurements in harmonic_peaks.items():
             for mId, psd_feature in measurements.items():
@@ -178,30 +171,3 @@ class Preprocess:
                 harmonic_peaks[nId][mId] = self._find_peaks(smoothed_feature)
 
         return harmonic_peaks
-
-
-    def start(self):
-
-        if self.vibration_data == None:
-            return
-
-        # Creating matrices from raw data
-        matrices = self._create_matrices()
-
-        # TODO: Set a threshold for including outlier detection process
-        if False:
-            print(matrices, '\n\n')
-            matrices = self._outlier_detection(vibration_data=matrices)
-            print(matrices)
-
-        # Normalizing samples to remove gravity effect
-        normalized_data = self._normalize_vibration_data(matrices=matrices)
-
-        # Extracting RMS (Root Mean Square) feature from normalized data
-        rms_feature = self._rms_feature_extraction(matrices=normalized_data)
-
-        # Extracting PSD (Power Spectral Density) feature from normalized data
-        psd_feature = self._psd_feature_extraction(matrices=normalized_data)
-
-        # Extracting harmonic peak feature
-        harmonic_peak_feature = self._harmonic_peak_feature_extraction(psd=psd_feature)
