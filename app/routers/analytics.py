@@ -1,5 +1,4 @@
 from fastapi import APIRouter, status, Depends, HTTPException
-from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from ..influxdb.influx import InfluxDB
@@ -72,6 +71,5 @@ async def preprocess_node_data(nodeId: str, admin = Depends(get_current_admin)):
     matrices = transformer.get_matrices()
 
     preprocessor = Preprocesser(matrices=matrices, nodes_ids=[nodeId], measurements_ids=measurements_ids)
-    rms_feature = preprocessor.rms_feature_extraction()
     psd_feature = preprocessor.psd_feature_extraction()
     harmonic_peak_feature = preprocessor.harmonic_peak_feature_extraction()

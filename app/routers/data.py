@@ -104,8 +104,6 @@ async def get_measurments_id(admin = Depends(get_current_admin)):
 @router.post('')
 async def send_data(dataList: DataModelList, gateway = Depends(get_current_gateway)):
     dList = parse_obj_as(DataModelList, dataList)
-    for nodeData in dList.data:
-        nData = parse_obj_as(DataModel, nodeData)
-        for vibrationData in nData.vibrationData:
-            vData = parse_obj_as(VibrationDataModel, vibrationData)
-            influx.write_vibration_data(nodeId=nData.nodeId, data=vData)
+    influx.write_vibration_data(data=dList)
+
+    return JSONResponse(content='', status_code=status.HTTP_204_NO_CONTENT)

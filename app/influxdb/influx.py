@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 from collections import defaultdict
 
-from ..models.SendDataModel import VibrationDataModel
+from ..models.SendDataModel import DataModelList
 from ..utils.env_vars import INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, INFLUXDB_URI
 
 from influxdb_client import InfluxDBClient, Point
@@ -17,30 +17,40 @@ class InfluxDB:
         self.query_api = self.client.query_api()
 
 
-    def write_vibration_data(self,nodeId: str, data: VibrationDataModel):
-        x_point = Point('vibration_measurement')\
-            .tag('nodeId', nodeId)\
-                .tag('measurementId', data.measurementId)\
-                    .field('x', data.x)\
-                        .time(time=datetime.utcfromtimestamp(data.time))
+    def write_vibration_data(self, data: DataModelList):
+        points = []
         
-        y_point = Point('vibration_measurement')\
-            .tag('nodeId', nodeId)\
-                .tag('measurementId', data.measurementId)\
-                    .field('y', data.y)\
-                        .time(time=datetime.utcfromtimestamp(data.time))
-        
-        z_point = Point('vibration_measurement')\
-            .tag('nodeId', nodeId)\
-                .tag('measurementId', data.measurementId)\
-                    .field('z', data.z)\
-                        .time(time=datetime.utcfromtimestamp(data.time))
+        for dataModel in data.data:
+            nodeId = dataModel.nodeId
 
-        self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=[x_point, y_point, z_point])
+            for vibrationData in dataModel.vibrationData:
+
+                x_point = Point('vibration_measurement')\
+                    .tag('nodeId', nodeId)\
+                        .tag('measurementId', vibrationData.measurementId)\
+                            .field('x', vibrationData.x)\
+                                .time(time=datetime.utcfromtimestamp(vibrationData.time))
+                
+                y_point = Point('vibration_measurement')\
+                    .tag('nodeId', nodeId)\
+                        .tag('measurementId', vibrationData.measurementId)\
+                            .field('y', vibrationData.y)\
+                                .time(time=datetime.utcfromtimestamp(vibrationData.time))
+                
+                z_point = Point('vibration_measurement')\
+                    .tag('nodeId', nodeId)\
+                        .tag('measurementId', vibrationData.measurementId)\
+                            .field('z', vibrationData.z)\
+                                .time(time=datetime.utcfromtimestamp(vibrationData.time))
+                
+                points.extend([x_point, y_point, z_point])
+
+        self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 
 
-    '''Returns all vibration data written in db if nodeId is None'''
     def get_vibration_data(self, nodeId: str = None):
+        '''Returns all vibration data written in db if nodeId is None'''
+
         filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
         query = f'from(bucket:"{INFLUXDB_BUCKET}")\
         |> range(start: 0)\
@@ -95,3 +105,10 @@ class InfluxDB:
         results = [r['measurementId'] for r in query_result]
 
         return results
+
+    
+    def clear_database(self):
+        import datetime
+
+        delete_api = self.client.delete_api()
+        delete_api.delete(start='1970-01-01T00:00:00Z', stop=datetime.datetime.now(), predicate='_measurement="vibration_measurement"', bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
