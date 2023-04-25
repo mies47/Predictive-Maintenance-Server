@@ -13,7 +13,7 @@ load_dotenv()
 BASE_URL = f'http://{os.getenv("SERVER_HOST")}:{os.getenv("SERVER_PORT")}{os.getenv("API_PREFIX")}'
 
 DATASET_MACHINES = [uuid.uuid4().hex for _ in range(10)]
-DATASET_MEASUREMENTS = [uuid.uuid4().hex for _ in range(30)]
+DATASET_MEASUREMENTS = [uuid.uuid4().hex for _ in range(20)]
 
 
 class ModelJsonObject(json.JSONEncoder):
@@ -63,7 +63,7 @@ class DataModelList:
 
 if __name__ == '__main__':
 	df = pd.read_csv('./datasets/accelerometer.csv', usecols=['x', 'y', 'z'])
-	datasetLength = 10000
+	datasetLength = 50000
 	machinesLength = len(DATASET_MACHINES)
 	measurementLength = len(DATASET_MEASUREMENTS)
 
