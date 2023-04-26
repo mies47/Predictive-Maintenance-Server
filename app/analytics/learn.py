@@ -51,10 +51,10 @@ def harmonic_peak_distance(p_1: List[Tuple[float, float]], p_2: List[Tuple[float
         closest_point_freq, closest_point_peak = q2[q2_closest_point_index]
 
         if np.abs(freq - closest_point_freq) * maximum_frequency < SMOOTHING_WINDOW_SIZE:
-            dist += np.linalg.norm(np.array(freq, peak) - np.array(closest_point_freq, closest_point_peak))
+            dist += np.linalg.norm(np.array([freq, peak]) - np.array([closest_point_freq, closest_point_peak]))
             q2.pop(q2_closest_point_index)
         else:
-            dist = np.linalg.norm(np.array(freq, peak))
+            dist = np.linalg.norm(np.array([freq, peak]))
 
         summation += dist
         counter += 1
