@@ -7,6 +7,9 @@ from copy import deepcopy
 
 
 def find_closest_point_index(peak_features: List[Tuple[float, float]], peak: Tuple[float, float]):
+    if not peak_features:
+        return None
+
     freqs = np.array(list(map(lambda point: point[0], peak_features)))
     freq_to_find = peak[0]
 
@@ -41,6 +44,10 @@ def harmonic_peak_distance(p_1: List[Tuple[float, float]], p_2: List[Tuple[float
     while q1:
         freq, peak = q1.pop()
         q2_closest_point_index = find_closest_point_index(q2, (freq, peak))
+        
+        if q2_closest_point_index is None:
+            continue
+
         closest_point_freq, closest_point_peak = q2[q2_closest_point_index]
 
         if np.abs(freq - closest_point_freq) * maximum_frequency < SMOOTHING_WINDOW_SIZE:
@@ -52,4 +59,4 @@ def harmonic_peak_distance(p_1: List[Tuple[float, float]], p_2: List[Tuple[float
         summation += dist
         counter += 1
 
-    return (summation + np.sum(list(map(lambda point: point[0], q2)))) / (counter + len(q2))
+    return (summation + np.sum(list(map(lambda point: point[1], q2)))) / (counter + len(q2))

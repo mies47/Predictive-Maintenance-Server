@@ -23,9 +23,7 @@ class Preprocesser:
 
         # TODO: Set a threshold for including outlier detection process
         if False:
-            print(matrices, '\n\n')
             self.matrices = self._outlier_detection(vibration_data=matrices)
-            print(matrices)
 
         # Normalizing samples to remove gravity effect
         self.normalized_data = self._normalize_vibration_data()
