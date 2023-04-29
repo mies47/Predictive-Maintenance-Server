@@ -2,7 +2,7 @@ from fastapi import APIRouter, status, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from ..models.SendDataModel import DataModelList, DataModel, VibrationDataModel
+from ..models.SendDataModel import DataModelList
 from ..influxdb.influx import InfluxDB
 from ..postgresdb.postgres import SessionLocal
 from ..postgresdb.models import Gateway, Admin
