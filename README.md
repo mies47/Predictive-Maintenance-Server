@@ -10,7 +10,7 @@ First pull the project to your local machine and navigate to the root directory 
 ```cd Predictive-Maintenance-Server```
 
 Add .env file based on the fields declared in .env.example file:
-```vi .env```
+```cp .env.example .env```
 
 Create the docker image using:
 ```docker build .```
