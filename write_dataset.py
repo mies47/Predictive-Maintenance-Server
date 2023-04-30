@@ -5,6 +5,7 @@ import requests
 import pandas as pd
 from typing import List
 from dotenv import load_dotenv
+from tqdm import tqdm
 
 
 load_dotenv()
@@ -12,8 +13,8 @@ load_dotenv()
 
 BASE_URL = f'http://{os.getenv("SERVER_HOST")}:{os.getenv("SERVER_PORT")}{os.getenv("API_PREFIX")}'
 
-DATASET_MACHINES = [uuid.uuid4().hex for _ in range(10)]
-DATASET_MEASUREMENTS = [uuid.uuid4().hex for _ in range(20)]
+DATASET_MACHINES = [uuid.uuid4().hex for _ in range(5)]
+DATASET_MEASUREMENTS = [uuid.uuid4().hex for _ in range(30)]
 
 
 class ModelJsonObject(json.JSONEncoder):
@@ -61,6 +62,16 @@ class DataModelList:
 		return dataModel
 
 
+	def add_vibration_data(self, nodeId: str, vibrationData: VibrationData):
+		for i, dataModel in enumerate(self.data):
+			if dataModel.nodeId == nodeId:
+				self.data[i].add_vibration_data(d=vibrationData)
+				return
+		
+		dataModel = DataModel(nodeId=nodeId, vibrationData=[vibrationData])
+		self.add_data_model(d=dataModel)
+
+
 if __name__ == '__main__':
 	df = pd.read_csv('./datasets/accelerometer.csv', usecols=['x', 'y', 'z'])
 	datasetLength = 50000
@@ -71,18 +82,16 @@ if __name__ == '__main__':
 
 	dataModelList = DataModelList()
 
-	for i, row in df.iterrows():
+	for i, row in tqdm(df.iterrows()):
 		if i == datasetLength - 1:
 			break
 
 		machineIndex = int((i / datasetLength) * machinesLength)
 		measurementIndex = int(((i % (datasetLength // machinesLength)) / (datasetLength // machinesLength)) * measurementLength)
 
-		dModel = dataModelList.get_node_data_model(nodeId=DATASET_MACHINES[machineIndex])
-
 		vData = VibrationData(time=baseTime + i, measurementId=DATASET_MEASUREMENTS[measurementIndex], x=row['x'], y=row['y'], z=row['z'])
 
-		dModel.add_vibration_data(d=vData)
+		dataModelList.add_vibration_data(nodeId=DATASET_MACHINES[machineIndex], vibrationData=vData)
 
 	r = requests.post(f'{BASE_URL}/signup/gateway', data=json.dumps({'mac': uuid.uuid4().hex, 'password': 'test'}))
 	token = r.json().get('token')
