@@ -39,6 +39,8 @@ def initialize_server():
     
     create_database()
 
+
+    '''Uncomment this line when you want to make influxdb empty'''
     # clear_time_series_database()
     
     return app

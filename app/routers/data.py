@@ -106,4 +106,4 @@ async def send_data(dataList: DataModelList, gateway = Depends(get_current_gatew
     dList = parse_obj_as(DataModelList, dataList)
     influx.write_vibration_data(data=dList)
 
-    return JSONResponse(content='', status_code=status.HTTP_204_NO_CONTENT)
+    return JSONResponse(content='', status_code=status.HTTP_202_ACCEPTED)
