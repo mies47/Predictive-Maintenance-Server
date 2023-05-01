@@ -6,7 +6,7 @@ from typing import List, Tuple
 from copy import deepcopy
 
 
-def find_closest_point_index(peak_features: List[Tuple[float, float]], peak: Tuple[float, float]):
+def _find_closest_point_index(peak_features: List[Tuple[float, float]], peak: Tuple[float, float]):
     if not peak_features:
         return None
 
@@ -43,7 +43,7 @@ def harmonic_peak_distance(p_1: List[Tuple[float, float]], p_2: List[Tuple[float
 
     while q1:
         freq, peak = q1.pop()
-        q2_closest_point_index = find_closest_point_index(q2, (freq, peak))
+        q2_closest_point_index = _find_closest_point_index(q2, (freq, peak))
         
         if q2_closest_point_index is None:
             continue
