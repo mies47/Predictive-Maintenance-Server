@@ -12,6 +12,9 @@ First pull the project to your local machine and navigate to the root directory 
 Add .env file based on the fields declared in .env.example file:
 ```cp .env.example .env```
 
+Install all the required python packages using:
+```pip3 install -r requirements.txt```
+
 Create the docker image using:
 ```docker build .```
 
