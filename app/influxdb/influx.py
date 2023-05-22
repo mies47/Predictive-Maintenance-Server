@@ -1,8 +1,9 @@
 import json
 from datetime import datetime
 from collections import defaultdict
+from typing import List
 
-from ..models.SendDataModel import DataModelList
+from ..models.SendDataModel import NodeModel
 from ..utils.env_vars import INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, INFLUXDB_URI
 
 from influxdb_client import InfluxDBClient, Point
@@ -17,33 +18,34 @@ class InfluxDB:
         self.query_api = self.client.query_api()
 
 
-    def write_vibration_data(self, data: DataModelList):
+    def write_vibration_data(self, data: List[NodeModel]):
         points = []
         
-        for dataModel in data.data:
-            nodeId = dataModel.nodeId
+        for nodeModel in data:
+            nodeId = nodeModel.node_id
 
-            for vibrationData in dataModel.vibrationData:
+            for measurementId, measurement in nodeModel.measurements.items():
+                for vibrationData in measurement.data:
 
-                x_point = Point('vibration_measurement')\
-                    .tag('nodeId', nodeId)\
-                        .tag('measurementId', vibrationData.measurementId)\
-                            .field('x', vibrationData.x)\
-                                .time(time=datetime.utcfromtimestamp(vibrationData.time))
+                    x_point = Point('vibration_measurement')\
+                        .tag('nodeId', nodeId)\
+                            .tag('measurementId', measurementId)\
+                                .field('x', vibrationData.x)\
+                                    .time(time=datetime.utcfromtimestamp(measurement.time))
                 
-                y_point = Point('vibration_measurement')\
-                    .tag('nodeId', nodeId)\
-                        .tag('measurementId', vibrationData.measurementId)\
-                            .field('y', vibrationData.y)\
-                                .time(time=datetime.utcfromtimestamp(vibrationData.time))
-                
-                z_point = Point('vibration_measurement')\
-                    .tag('nodeId', nodeId)\
-                        .tag('measurementId', vibrationData.measurementId)\
-                            .field('z', vibrationData.z)\
-                                .time(time=datetime.utcfromtimestamp(vibrationData.time))
-                
-                points.extend([x_point, y_point, z_point])
+                    y_point = Point('vibration_measurement')\
+                        .tag('nodeId', nodeId)\
+                            .tag('measurementId', measurementId)\
+                                .field('y', vibrationData.y)\
+                                    .time(time=datetime.utcfromtimestamp(measurement.time))
+                    
+                    z_point = Point('vibration_measurement')\
+                        .tag('nodeId', nodeId)\
+                            .tag('measurementId', measurementId)\
+                                .field('z', vibrationData.z)\
+                                    .time(time=datetime.utcfromtimestamp(measurement.time))
+                    
+                    points.extend([x_point, y_point, z_point])
 
         self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 
