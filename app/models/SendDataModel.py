@@ -1,10 +1,8 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict
 
 
 class VibrationDataModel(BaseModel):
-    time: float
-    measurementId: str
     x: float
     y: float
     z: float
@@ -13,16 +11,18 @@ class VibrationDataModel(BaseModel):
         orm_mode = True
 
 
-class DataModel(BaseModel):
-    nodeId: str
-    vibrationData: List[VibrationDataModel]
+class MeasurementModel(BaseModel):
+    id: str
+    time: float
+    data: List[VibrationDataModel]
 
     class Config:
         orm_mode = True
 
 
-class DataModelList(BaseModel):
-    data: List[DataModel]
+class NodeModel(BaseModel):
+    node_id: str
+    measurements: Dict[str, MeasurementModel]
 
     class Config:
         orm_mode = True
