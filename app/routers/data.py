@@ -1,10 +1,10 @@
-from typing import List
+from typing import Dict
 
 from fastapi import APIRouter, status, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from ..models.SendDataModel import NodeModel, MeasurementModel, VibrationDataModel
+from ..models.SendDataModel import NodeModel
 from ..influxdb.influx import InfluxDB
 from ..postgresdb.postgres import SessionLocal
 from ..postgresdb.models import Gateway, Admin
@@ -104,8 +104,8 @@ async def get_measurments_id(admin = Depends(get_current_admin)):
 
 
 @router.post('')
-async def send_data(dataList: List[NodeModel], gateway = Depends(get_current_gateway)):
-    dList = parse_obj_as(List[NodeModel], dataList)
+async def send_data(dataList: Dict[str, NodeModel], gateway = Depends(get_current_gateway)):
+    dList = parse_obj_as(Dict[str, NodeModel], dataList)
     influx.write_vibration_data(data=dList)
 
     return JSONResponse(content='', status_code=status.HTTP_202_ACCEPTED)
