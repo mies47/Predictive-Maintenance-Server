@@ -107,6 +107,22 @@ class InfluxDB:
         results = [r['measurementId'] for r in query_result]
 
         return results
+    
+
+    def write_psd_features(self):
+        ...
+
+    
+    def write_processed_psd_features(self):
+        ...
+    
+
+    def get_psd_features(self):
+        ...
+
+    
+    def get_processed_psd_features(self):
+        ...
 
     
     def clear_database(self):
