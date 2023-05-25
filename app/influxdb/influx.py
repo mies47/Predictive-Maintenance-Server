@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 from collections import defaultdict
-from typing import List
+from typing import Dict
 
 from ..models.SendDataModel import NodeModel
 from ..utils.env_vars import INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, INFLUXDB_URI
@@ -18,11 +18,10 @@ class InfluxDB:
         self.query_api = self.client.query_api()
 
 
-    def write_vibration_data(self, data: List[NodeModel]):
+    def write_vibration_data(self, data: Dict[str, NodeModel]):
         points = []
         
-        for nodeModel in data:
-            nodeId = nodeModel.node_id
+        for nodeId, nodeModel in data.items():
 
             for measurementId, measurement in nodeModel.measurements.items():
                 for vibrationData in measurement.data:
