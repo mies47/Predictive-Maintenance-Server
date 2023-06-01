@@ -93,6 +93,7 @@ class InfluxDB:
 
     def get_all_measurements_id(self, nodeId: str = None):
         filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
+
         query = f'from(bucket:"{INFLUXDB_BUCKET}")\
         |> range(start: 0)\
         |> filter(fn:(r) => r._measurement == "vibration_measurement")\
@@ -108,20 +109,47 @@ class InfluxDB:
         return results
     
 
-    def write_psd_features(self):
-        ...
+    def write_psd_features(self, psd_feature: defaultdict(lambda: defaultdict(lambda: 0)), freqs):
+        points = []
 
-    
-    def write_processed_psd_features(self):
-        ...
-    
+        for nId, measurements in psd_feature.items():
+            for mId, psd in measurements.items():
+                for i, feature in enumerate(psd):
+                    points.append(Point('psd_feature')\
+                                    .tag('nodeId', nId)\
+                                        .tag('measurementId', mId)\
+                                            .tag('frequency', freqs[i])\
+                                                .field('psd_value', feature)\
+                                                    .time(time=datetime.now()))
+                    
+        self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 
-    def get_psd_features(self):
-        ...
 
-    
-    def get_processed_psd_features(self):
-        ...
+    def get_psd_features(self, nodeId = None, measurmentId = None):
+        filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
+        filter_by_measurment = f'|> filter(fn:(r) => r.measurmentId == "{measurmentId}")'
+
+        query = f'from(bucket:"{INFLUXDB_BUCKET}")\
+        |> range(start: 0)\
+        |> filter(fn:(r) => r._measurement == "psd_feature")\
+        {filter_by_node if nodeId is not None else ""}\
+        {filter_by_measurment if measurmentId is not None else ""}\
+        |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId", "frequency"])\
+        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
+        |> yield()'
+
+        query_result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
+        query_result = json.loads(query_result.to_json(orient='records'))
+
+        results = defaultdict(lambda: defaultdict(lambda: []))
+        for r in query_result:
+            # results[r['nodeId']][r['measurementId']].append({
+            #     'psd': 
+            #     'time': r['_time']
+            # })
+            pass
+
+        return results
 
     
     def clear_database(self):
