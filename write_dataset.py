@@ -1,13 +1,14 @@
 import os
 import json
+import time
+import tqdm
 import uuid
 import requests
 import pandas as pd
 
 from typing import List, Dict
-from collections import defaultdict
 from dotenv import load_dotenv
-from tqdm import tqdm
+
 
 
 load_dotenv()
@@ -76,11 +77,11 @@ if __name__ == '__main__':
 	machinesLength = len(DATASET_MACHINES)
 	measurementLength = len(DATASET_MEASUREMENTS)
 
-	baseTime = 1682193008
+	baseTime = time.time() - 5 * 60 * 60 * 24
 
 	dList = {}
 
-	for i, row in tqdm(df.iterrows()):
+	for i, row in tqdm.tqdm(df.iterrows()):
 		if i == datasetLength - 1:
 			break
 
@@ -104,4 +105,5 @@ if __name__ == '__main__':
 	auth = {'Authorization': f'Bearer {token}'}
 
 	r = requests.post(f'{BASE_URL}/data', data=json.dumps(dList, cls=ModelJsonObject, indent=4), headers=auth)
+	print(f'STATUS: {r.status_code}')
 	r.close()

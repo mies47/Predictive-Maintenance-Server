@@ -1,4 +1,5 @@
 from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from ..influxdb.influx import InfluxDB
@@ -47,8 +48,12 @@ async def get_current_admin(token: HTTPAuthorizationCredentials = Depends(auth_s
     return admin
 
 
-@router.post('/preprocess')
-async def preprocess_all_data(admin = Depends(get_current_admin)):
+@router.get('/psd')
+async def get_all_psd_features(admin = Depends(get_current_admin)):
+    psd_feature = influx.get_psd_features()
+    if psd_feature:
+        return JSONResponse(content=psd_feature, status_code=status.HTTP_200_OK)
+    
     vibration_data = influx.get_vibration_data()
     nodes_ids = influx.get_all_nodes_id()
     measurements_ids = influx.get_all_measurements_id()
@@ -62,8 +67,12 @@ async def preprocess_all_data(admin = Depends(get_current_admin)):
     harmonic_peak_feature = preprocessor.harmonic_peak_feature_extraction()
 
 
-@router.post('/preprocess/{nodeId}')
-async def preprocess_node_data(nodeId: str, admin = Depends(get_current_admin)):
+@router.get('/psd/{nodeId}')
+async def get_all_psd_features(nodeId: str, admin = Depends(get_current_admin)):
+    psd_feature = influx.get_psd_features(nodeId=nodeId)
+    if psd_feature:
+        return JSONResponse(content=psd_feature, status_code=status.HTTP_200_OK)
+        
     vibration_data = influx.get_vibration_data(nodeId=nodeId)
     measurements_ids = influx.get_all_measurements_id(nodeId=nodeId)
 
