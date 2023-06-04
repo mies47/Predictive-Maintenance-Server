@@ -60,11 +60,17 @@ async def get_all_psd_features(admin = Depends(get_current_admin)):
 
     transformer = Transformer(vibration_data=vibration_data)
     matrices = transformer.get_matrices()
+    
+    for nId, measurments in matrices.items():
+        for mId, measurement in measurments.items():
+            print(nId, mId, measurement)
 
     preprocessor = Preprocesser(matrices=matrices, nodes_ids=nodes_ids, measurements_ids=measurements_ids)  
-    rms_feature = preprocessor.rms_feature_extraction()
     psd_feature = preprocessor.psd_feature_extraction()
-    harmonic_peak_feature = preprocessor.harmonic_peak_feature_extraction()
+    
+    # influx.write_psd_features(psd_feature=psd_feature)
+    
+    return JSONResponse(content=psd_feature, status_code=status.HTTP_200_OK)
 
 
 @router.get('/psd/{nodeId}')
@@ -78,7 +84,14 @@ async def get_all_psd_features(nodeId: str, admin = Depends(get_current_admin)):
 
     transformer = Transformer(vibration_data=vibration_data)
     matrices = transformer.get_matrices()
+    
+    for nId, measurments in matrices.items():
+        for mId, measurement in measurments.items():
+            print(nId, mId, measurement)
 
     preprocessor = Preprocesser(matrices=matrices, nodes_ids=[nodeId], measurements_ids=measurements_ids)
     psd_feature = preprocessor.psd_feature_extraction()
-    harmonic_peak_feature = preprocessor.harmonic_peak_feature_extraction()
+    
+    # influx.write_psd_features(psd_feature=psd_feature, freqs=freqs)
+
+    return JSONResponse(content=psd_feature, status_code=status.HTTP_200_OK)
