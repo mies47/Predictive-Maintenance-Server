@@ -62,11 +62,11 @@ async def get_all_psd_features(admin = Depends(get_current_admin)):
     matrices = transformer.get_matrices()
 
     preprocessor = Preprocesser(matrices=matrices, nodes_ids=nodes_ids, measurements_ids=measurements_ids)  
-    psd_feature = preprocessor.psd_feature_extraction()
+    psd_features = preprocessor.psd_feature_extraction()
     
-    # influx.write_psd_features(psd_feature=psd_feature)
+    influx.write_psd_features(psd_features=psd_features)
     
-    return JSONResponse(content=psd_feature, status_code=status.HTTP_200_OK)
+    return JSONResponse(content=psd_features, status_code=status.HTTP_200_OK)
 
 
 @router.get('/psd/{nodeId}')
@@ -82,8 +82,8 @@ async def get_all_psd_features(nodeId: str, admin = Depends(get_current_admin)):
     matrices = transformer.get_matrices()
 
     preprocessor = Preprocesser(matrices=matrices, nodes_ids=[nodeId], measurements_ids=measurements_ids)
-    psd_feature = preprocessor.psd_feature_extraction()
+    psd_features = preprocessor.psd_feature_extraction()
     
-    # influx.write_psd_features(psd_feature=psd_feature, freqs=freqs)
+    influx.write_psd_features(psd_features=psd_features)
 
-    return JSONResponse(content=psd_feature, status_code=status.HTTP_200_OK)
+    return JSONResponse(content=psd_features, status_code=status.HTTP_200_OK)

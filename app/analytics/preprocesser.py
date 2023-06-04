@@ -67,7 +67,7 @@ class Preprocesser:
     def psd_feature_extraction(self):
         '''Power Spectral Density feature'''
 
-        psd_feature = defaultdict(lambda: defaultdict(lambda: 0))
+        psd_feature = defaultdict(lambda: defaultdict(lambda: []))
 
         for nId, measurements in self.normalized_data.items():
             for mId, m in measurements.items():
@@ -76,8 +76,15 @@ class Preprocesser:
                 x_psd_feature = (dct(m['x'], type=2, norm='ortho') ** 2) / number_of_samples
                 y_psd_feature = (dct(m['y'], type=2, norm='ortho') ** 2) / number_of_samples
                 z_psd_feature = (dct(m['z'], type=2, norm='ortho') ** 2) / number_of_samples
-
-                psd_feature[nId][mId] = x_psd_feature + y_psd_feature + z_psd_feature
+                
+                psd_values = x_psd_feature + y_psd_feature + z_psd_feature
+                freqs = fftfreq(m['x'].shape[0], d=1/SAMPLING_RATE)
+                
+                for _, (freq, psd_value) in enumerate(zip(freqs, psd_values)):
+                    psd_feature[nId][mId].append({
+                        'psd_value': psd_value,
+                        'frequency': freq
+                    })
 
         return psd_feature
 
@@ -141,10 +148,8 @@ class Preprocesser:
         return smoothed
     
 
-    def _find_peaks(self, x):
+    def _find_peaks(self, x, freqs):
         '''Returning the most dominant peaks and corresponding frequencies of a specific signal'''
-        
-        freqs = fftfreq(x.shape[0], d = 1/SAMPLING_RATE)
 
         peaks_index, _ = find_peaks(x)
 
@@ -161,9 +166,15 @@ class Preprocesser:
         harmonic_peaks = self.psd_feature_extraction()
 
         for nId, measurements in harmonic_peaks.items():
-            for mId, psd_feature in measurements.items():
-                smoothed_feature = self._smooth(x=psd_feature, method='hanning')
+            for mId, psd_features in measurements.items():
+                frequencies, psd_values = [], []
+                
+                for psd_feature in psd_features:
+                    psd_values.append(psd_feature['psd_value'])
+                    frequencies.append(psd_feature['frequency'])
 
-                harmonic_peaks[nId][mId] = self._find_peaks(smoothed_feature)
+                smoothed_feature = self._smooth(x=psd_values, method='hanning')
+
+                harmonic_peaks[nId][mId] = self._find_peaks(x=smoothed_feature, freqs=frequencies)
 
         return harmonic_peaks
