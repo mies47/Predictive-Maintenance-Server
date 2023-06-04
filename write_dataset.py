@@ -5,8 +5,10 @@ import tqdm
 import uuid
 import requests
 import pandas as pd
+from copy import deepcopy
 
 from typing import List, Dict
+from collections import defaultdict
 from dotenv import load_dotenv
 
 
@@ -53,7 +55,7 @@ class Measurement:
 class Node:
 	def __init__(self, node_id:str, measurements: Dict[str, Measurement] = {}):
 		self.node_id = node_id
-		self.measurements = measurements
+		self.measurements = deepcopy(measurements)
 
 	def add_measurement(
 		self,
@@ -97,6 +99,7 @@ if __name__ == '__main__':
 			dList[node_id].add_measurement(id=measurement_id, time=baseTime + i, data=[vData])
 		else:
 			dList[node_id] = Node(node_id=node_id)
+			dList[node_id].add_measurement(id=measurement_id, time=baseTime + i, data=[vData])
 
 	r = requests.post(f'{BASE_URL}/signup/gateway', data=json.dumps({'mac': uuid.uuid4().hex, 'password': 'test'}))
 	token = r.json().get('token')

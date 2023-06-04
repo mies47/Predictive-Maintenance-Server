@@ -1,10 +1,11 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import defaultdict
 from typing import Dict
 
 from ..models.SendDataModel import NodeModel
 from ..utils.env_vars import INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, INFLUXDB_URI
+from ..utils.constants import PROCESSED_DATA_EXPIRATION_TIME
 
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -24,25 +25,28 @@ class InfluxDB:
         for nodeId, nodeModel in data.items():
 
             for measurementId, measurement in nodeModel.measurements.items():
-                for vibrationData in measurement.data:
+                for i, vibrationData in enumerate(measurement.data):
 
                     x_point = Point('vibration_measurement')\
                         .tag('nodeId', nodeId)\
                             .tag('measurementId', measurementId)\
-                                .field('x', vibrationData.x)\
-                                    .time(time=datetime.utcfromtimestamp(measurement.time))
+                                .tag('index', i)\
+                                    .field('x', vibrationData.x)\
+                                        .time(time=datetime.utcfromtimestamp(measurement.time))
                 
                     y_point = Point('vibration_measurement')\
                         .tag('nodeId', nodeId)\
                             .tag('measurementId', measurementId)\
-                                .field('y', vibrationData.y)\
-                                    .time(time=datetime.utcfromtimestamp(measurement.time))
+                                .tag('index', i)\
+                                    .field('y', vibrationData.y)\
+                                        .time(time=datetime.utcfromtimestamp(measurement.time))
                     
                     z_point = Point('vibration_measurement')\
                         .tag('nodeId', nodeId)\
                             .tag('measurementId', measurementId)\
-                                .field('z', vibrationData.z)\
-                                    .time(time=datetime.utcfromtimestamp(measurement.time))
+                                .tag('index', i)\
+                                    .field('z', vibrationData.z)\
+                                        .time(time=datetime.utcfromtimestamp(measurement.time))
                     
                     points.extend([x_point, y_point, z_point])
 
@@ -57,7 +61,7 @@ class InfluxDB:
         |> range(start: 0)\
         |> filter(fn:(r) => r._measurement == "vibration_measurement")\
         {filter_by_node if nodeId is not None else ""}\
-        |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId"])\
+        |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId", "index"])\
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
         |> yield()'
 
@@ -119,8 +123,9 @@ class InfluxDB:
                                     .tag('nodeId', nId)\
                                         .tag('measurementId', mId)\
                                             .tag('frequency', freqs[i])\
-                                                .field('psd_value', feature)\
-                                                    .time(time=datetime.now()))
+                                                .tag('index'. i)\
+                                                    .field('psd_value', feature)\
+                                                        .time(time=datetime.now()))
                     
         self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 
@@ -134,7 +139,7 @@ class InfluxDB:
         |> filter(fn:(r) => r._measurement == "psd_feature")\
         {filter_by_node if nodeId is not None else ""}\
         {filter_by_measurment if measurmentId is not None else ""}\
-        |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId", "frequency"])\
+        |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId", "frequency", "index"])\
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
         |> yield()'
 
@@ -143,11 +148,11 @@ class InfluxDB:
 
         results = defaultdict(lambda: defaultdict(lambda: []))
         for r in query_result:
-            # results[r['nodeId']][r['measurementId']].append({
-            #     'psd': 
-            #     'time': r['_time']
-            # })
-            pass
+            if r['_time'] + timedelta(minutes=PROCESSED_DATA_EXPIRATION_TIME) < datetime.now():
+                results[r['nodeId']][r['measurementId']].append({
+                    'psd_value': r['psd_value'],
+                    'frequency': r['frequency']
+                })
 
         return results
 
