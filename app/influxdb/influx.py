@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from collections import defaultdict
 from typing import Dict
 
@@ -113,19 +113,19 @@ class InfluxDB:
         return results
     
 
-    def write_psd_features(self, psd_feature: defaultdict(lambda: defaultdict(lambda: 0)), freqs):
+    def write_psd_features(self, psd_features: defaultdict(lambda: defaultdict(lambda: []))):
         points = []
 
-        for nId, measurements in psd_feature.items():
+        for nId, measurements in psd_features.items():
             for mId, psd in measurements.items():
                 for i, feature in enumerate(psd):
                     points.append(Point('psd_feature')\
                                     .tag('nodeId', nId)\
                                         .tag('measurementId', mId)\
-                                            .tag('frequency', freqs[i])\
-                                                .tag('index'. i)\
-                                                    .field('psd_value', feature)\
-                                                        .time(time=datetime.now()))
+                                            .tag('frequency', feature['frequency'])\
+                                                .tag('index', i)\
+                                                    .field('psd_value', feature['psd_value'])\
+                                                        .time(time=datetime.utcnow()))
                     
         self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 

@@ -23,8 +23,8 @@ class Transformer:
                     matrices[nId][mId]['z'].append(sample['z'])
                 
                 # Converting collected samples to numpy arrays
-                matrices[nId][mId]['x'] = np.array(matrices[nId][mId]['x'], dtype=np.float32)
-                matrices[nId][mId]['y'] = np.array(matrices[nId][mId]['y'], dtype=np.float32)
-                matrices[nId][mId]['z'] = np.array(matrices[nId][mId]['z'], dtype=np.float32)
+                matrices[nId][mId]['x'] = np.array(matrices[nId][mId]['x'], dtype=np.float64)
+                matrices[nId][mId]['y'] = np.array(matrices[nId][mId]['y'], dtype=np.float64)
+                matrices[nId][mId]['z'] = np.array(matrices[nId][mId]['z'], dtype=np.float64)
 
         return matrices
