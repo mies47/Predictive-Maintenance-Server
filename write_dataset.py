@@ -4,6 +4,7 @@ import time
 import tqdm
 import uuid
 import requests
+import random
 import pandas as pd
 from copy import deepcopy
 
@@ -19,7 +20,7 @@ load_dotenv()
 BASE_URL = f'http://{os.getenv("SERVER_HOST")}:{os.getenv("SERVER_PORT")}{os.getenv("API_PREFIX")}'
 
 DATASET_MACHINES = [uuid.uuid4().hex for _ in range(5)]
-DATASET_MEASUREMENTS = [uuid.uuid4().hex for _ in range(30)]
+DATASET_MEASUREMENTS = [uuid.uuid4().hex for _ in range(20)]
 
 
 class ModelJsonObject(json.JSONEncoder):
@@ -41,9 +42,9 @@ class VibrationData:
 
 class Measurement:
 	def __init__(self, id: str, time: float, data: List[VibrationData] = []):
-		self.time = time
-		self.id = id
-		self.data = data
+		self.time = deepcopy(time)
+		self.id = deepcopy(id)
+		self.data = deepcopy(data)
 
 	def add_new_data(self, new_data: VibrationData):
 		self.data.append(new_data)
@@ -75,12 +76,13 @@ class Node:
 
 if __name__ == '__main__':
 	df = pd.read_csv('./datasets/accelerometer.csv', usecols=['x', 'y', 'z'])
-	datasetLength = 30000
+	datasetLength = 20000
 	machinesLength = len(DATASET_MACHINES)
 	measurementLength = len(DATASET_MEASUREMENTS)
 
-	baseTime = time.time() - 5 * 60 * 60 * 24
-
+	t1 = int(time.time() - 20 * 60 * 60 * 24)
+	t2 = int(time.time())
+	
 	dList = {}
 
 	for i, row in tqdm.tqdm(df.iterrows()):
@@ -96,10 +98,10 @@ if __name__ == '__main__':
 		measurement_id = DATASET_MEASUREMENTS[measurementIndex]
   
 		if node_id in dList:
-			dList[node_id].add_measurement(id=measurement_id, time=baseTime + i, data=[vData])
+			dList[node_id].add_measurement(id=measurement_id, time=random.randint(t1, t2), data=[vData])
 		else:
 			dList[node_id] = Node(node_id=node_id)
-			dList[node_id].add_measurement(id=measurement_id, time=baseTime + i, data=[vData])
+			dList[node_id].add_measurement(id=measurement_id, time=random.randint(t1, t2), data=[vData])
 
 	r = requests.post(f'{BASE_URL}/signup/gateway', data=json.dumps({'mac': uuid.uuid4().hex, 'password': 'test'}))
 	token = r.json().get('token')

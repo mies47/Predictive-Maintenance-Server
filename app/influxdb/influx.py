@@ -26,7 +26,7 @@ class InfluxDB:
 
             for measurementId, measurement in nodeModel.measurements.items():
                 for i, vibrationData in enumerate(measurement.data):
-
+                    
                     x_point = Point('vibration_measurement')\
                         .tag('nodeId', nodeId)\
                             .tag('measurementId', measurementId)\
@@ -70,6 +70,7 @@ class InfluxDB:
 
         results = defaultdict(lambda: defaultdict(lambda: []))
         for r in query_result:
+            print(datetime.utcfromtimestamp(r['_time']) + timedelta(minutes=PROCESSED_DATA_EXPIRATION_TIME))
             results[r['nodeId']][r['measurementId']].append({
                 'x': r['x'],
                 'y': r['y'],
