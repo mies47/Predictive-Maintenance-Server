@@ -70,12 +70,11 @@ class InfluxDB:
 
         results = defaultdict(lambda: defaultdict(lambda: []))
         for r in query_result:
-            print(datetime.utcfromtimestamp(r['_time']) + timedelta(minutes=PROCESSED_DATA_EXPIRATION_TIME))
             results[r['nodeId']][r['measurementId']].append({
                 'x': r['x'],
                 'y': r['y'],
                 'z': r['z'],
-                'time': r['_time']
+                'time': r['_time'] // 1000
             })
 
         return results
@@ -136,7 +135,7 @@ class InfluxDB:
         filter_by_measurment = f'|> filter(fn:(r) => r.measurmentId == "{measurmentId}")'
 
         query = f'from(bucket:"{INFLUXDB_BUCKET}")\
-        |> range(start: 0)\
+        |> range(start: {-1 * PROCESSED_DATA_EXPIRATION_TIME}m)\
         |> filter(fn:(r) => r._measurement == "psd_feature")\
         {filter_by_node if nodeId is not None else ""}\
         {filter_by_measurment if measurmentId is not None else ""}\
@@ -149,11 +148,10 @@ class InfluxDB:
 
         results = defaultdict(lambda: defaultdict(lambda: []))
         for r in query_result:
-            if r['_time'] + timedelta(minutes=PROCESSED_DATA_EXPIRATION_TIME) < datetime.now():
-                results[r['nodeId']][r['measurementId']].append({
-                    'psd_value': r['psd_value'],
-                    'frequency': r['frequency']
-                })
+            results[r['nodeId']][r['measurementId']].append({
+                'psd_value': r['psd_value'],
+                'frequency': r['frequency']
+            })
 
         return results
 

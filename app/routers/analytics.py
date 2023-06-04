@@ -60,10 +60,6 @@ async def get_all_psd_features(admin = Depends(get_current_admin)):
 
     transformer = Transformer(vibration_data=vibration_data)
     matrices = transformer.get_matrices()
-    
-    for nId, measurments in matrices.items():
-        for mId, measurement in measurments.items():
-            print(nId, mId, measurement)
 
     preprocessor = Preprocesser(matrices=matrices, nodes_ids=nodes_ids, measurements_ids=measurements_ids)  
     psd_feature = preprocessor.psd_feature_extraction()
@@ -84,10 +80,6 @@ async def get_all_psd_features(nodeId: str, admin = Depends(get_current_admin)):
 
     transformer = Transformer(vibration_data=vibration_data)
     matrices = transformer.get_matrices()
-    
-    for nId, measurments in matrices.items():
-        for mId, measurement in measurments.items():
-            print(nId, mId, measurement)
 
     preprocessor = Preprocesser(matrices=matrices, nodes_ids=[nodeId], measurements_ids=measurements_ids)
     psd_feature = preprocessor.psd_feature_extraction()
