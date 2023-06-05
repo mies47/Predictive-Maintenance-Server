@@ -48,6 +48,47 @@ async def get_current_admin(token: HTTPAuthorizationCredentials = Depends(auth_s
     return admin
 
 
+@router.get('/rms')
+async def get_all_rms_features(admin = Depends(get_current_admin)):
+    rms_features = influx.get_rms_features()
+    if rms_features:
+        return JSONResponse(content=rms_features, status_code=status.HTTP_200_OK)
+    
+    vibration_data = influx.get_vibration_data()
+    nodes_ids = influx.get_all_nodes_id()
+    measurements_ids = influx.get_all_measurements_id()
+
+    transformer = Transformer(vibration_data=vibration_data)
+    matrices = transformer.get_matrices()
+
+    preprocessor = Preprocesser(matrices=matrices, nodes_ids=nodes_ids, measurements_ids=measurements_ids)  
+    rms_features = preprocessor.rms_feature_extraction()
+    
+    influx.write_rms_features(rms_features=rms_features)
+    
+    return JSONResponse(content=rms_features, status_code=status.HTTP_200_OK)
+
+
+@router.get('/rms/{nodeId}')
+async def get_all_rms_features(nodeId: str, admin = Depends(get_current_admin)):
+    rms_features = influx.get_rms_features(nodeId=nodeId)
+    if rms_features:
+        return JSONResponse(content=rms_features, status_code=status.HTTP_200_OK)
+        
+    vibration_data = influx.get_vibration_data(nodeId=nodeId)
+    measurements_ids = influx.get_all_measurements_id(nodeId=nodeId)
+
+    transformer = Transformer(vibration_data=vibration_data)
+    matrices = transformer.get_matrices()
+
+    preprocessor = Preprocesser(matrices=matrices, nodes_ids=[nodeId], measurements_ids=measurements_ids)
+    rms_features = preprocessor.rms_feature_extraction()
+    
+    influx.write_rms_features(rms_features=rms_features)
+
+    return JSONResponse(content=rms_features, status_code=status.HTTP_200_OK)
+
+
 @router.get('/psd')
 async def get_all_psd_features(admin = Depends(get_current_admin)):
     psd_feature = influx.get_psd_features()
