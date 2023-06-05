@@ -70,6 +70,7 @@ class InfluxDB:
 
         results = defaultdict(lambda: defaultdict(lambda: []))
         for r in query_result:
+            print(r)
             results[r['nodeId']][r['measurementId']].append({
                 'x': r['x'],
                 'y': r['y'],
@@ -84,7 +85,8 @@ class InfluxDB:
         query = f'from(bucket:"{INFLUXDB_BUCKET}")\
         |> range(start: 0)\
         |> filter(fn:(r) => r._measurement == "vibration_measurement")\
-        |> keep(columns: ["nodeId"])\
+        |> keep(columns: ["_time", "_field", "_value", "nodeId"])\
+        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
         |> distinct(column: "nodeId")'
 
         query_result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
@@ -102,13 +104,72 @@ class InfluxDB:
         |> range(start: 0)\
         |> filter(fn:(r) => r._measurement == "vibration_measurement")\
         {filter_by_node if nodeId is not None else ""}\
-        |> keep(columns: ["measurementId"])\
+        |> keep(columns: ["_time", "_field", "_value", "measurementId"])\
+        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
         |> distinct(column: "measurementId")'
 
         query_result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
         query_result = json.loads(query_result.to_json(orient='records'))
 
         results = [r['measurementId'] for r in query_result]
+
+        return results
+    
+    
+    def write_rms_features(self, rms_features: defaultdict(lambda: defaultdict(lambda: {}))):
+        points = []
+
+        for nId, measurements in rms_features.items():
+            for mId, rms in measurements.items():
+                insertion_time = datetime.utcnow()
+
+                x_point = Point('rms_feature')\
+                                .tag('nodeId', nId)\
+                                    .tag('measurementId', mId)\
+                                        .field('x_rms_value', rms['x'])\
+                                            .time(time=insertion_time)
+
+                y_point = Point('rms_feature')\
+                                .tag('nodeId', nId)\
+                                    .tag('measurementId', mId)\
+                                        .field('y_rms_value', rms['y'])\
+                                            .time(time=insertion_time)
+                                            
+                z_point = Point('rms_feature')\
+                                .tag('nodeId', nId)\
+                                    .tag('measurementId', mId)\
+                                        .field('z_rms_value', rms['z'])\
+                                            .time(time=insertion_time)
+                                            
+                points.extend([x_point, y_point, z_point])
+                    
+        self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
+
+
+    def get_rms_features(self, nodeId = None, measurmentId = None):
+        filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
+        filter_by_measurment = f'|> filter(fn:(r) => r.measurmentId == "{measurmentId}")'
+
+        query = f'from(bucket:"{INFLUXDB_BUCKET}")\
+        |> range(start: {-1 * PROCESSED_DATA_EXPIRATION_TIME}m)\
+        |> filter(fn:(r) => r._measurement == "rms_feature")\
+        {filter_by_node if nodeId is not None else ""}\
+        {filter_by_measurment if measurmentId is not None else ""}\
+        |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId"])\
+        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
+        |> yield()'
+
+        query_result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
+        query_result = json.loads(query_result.to_json(orient='records'))
+
+        results = defaultdict(lambda: defaultdict(lambda: {}))
+        for r in query_result:
+            print(r)
+            results[r['nodeId']][r['measurementId']] = {
+                'x': r['x_rms_value'],
+                'y': r['y_rms_value'],
+                'z': r['z_rms_value']
+            }
 
         return results
     
@@ -160,4 +221,6 @@ class InfluxDB:
         import datetime
 
         delete_api = self.client.delete_api()
+        delete_api.delete(start='1970-01-01T00:00:00Z', stop=datetime.datetime.now(), predicate='_measurement="rms_feature"', bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
+        delete_api.delete(start='1970-01-01T00:00:00Z', stop=datetime.datetime.now(), predicate='_measurement="psd_feature"', bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
         delete_api.delete(start='1970-01-01T00:00:00Z', stop=datetime.datetime.now(), predicate='_measurement="vibration_measurement"', bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
