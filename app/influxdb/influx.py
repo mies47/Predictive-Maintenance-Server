@@ -12,6 +12,8 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 
 class InfluxDB:
+    MAIN_TABLES = ['vibration_measurment']
+    ALL_TABLES = MAIN_TABLES.extend(['psd_feature', 'rms_feature'])
 
     def __init__(self):
         self.client = InfluxDBClient(url=INFLUXDB_URI, org=INFLUXDB_ORG, token=INFLUXDB_TOKEN)
@@ -215,12 +217,23 @@ class InfluxDB:
             })
 
         return results
+    
+    
+    def clear_cached_data(self):
+        import datetime
+
+        delete_api = self.client.delete_api()
+        
+        for table in InfluxDB.ALL_TABLES:
+            if table not in InfluxDB.MAIN_TABLES:
+                delete_api.delete(start='1970-01-01T00:00:00Z', stop=datetime.datetime.now(), predicate=f'_measurement="{table}"', bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
+        
 
     
     def clear_database(self):
         import datetime
 
         delete_api = self.client.delete_api()
-        delete_api.delete(start='1970-01-01T00:00:00Z', stop=datetime.datetime.now(), predicate='_measurement="rms_feature"', bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
-        delete_api.delete(start='1970-01-01T00:00:00Z', stop=datetime.datetime.now(), predicate='_measurement="psd_feature"', bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
-        delete_api.delete(start='1970-01-01T00:00:00Z', stop=datetime.datetime.now(), predicate='_measurement="vibration_measurement"', bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
+        
+        for table in InfluxDB.ALL_TABLES:
+            delete_api.delete(start='1970-01-01T00:00:00Z', stop=datetime.datetime.now(), predicate=f'_measurement="{table}"', bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
