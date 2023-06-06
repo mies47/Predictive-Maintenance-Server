@@ -5,6 +5,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from ..influxdb.influx import InfluxDB
 from ..postgresdb.postgres import SessionLocal
 from ..postgresdb.models import Admin
+from ..models.AnalyticsDataModel import GetDataModel
 from ..auth.handler import decodeJWT
 from ..analytics.transformer import Transformer
 from ..analytics.preprocesser import Preprocesser
@@ -49,8 +50,11 @@ async def get_current_admin(token: HTTPAuthorizationCredentials = Depends(auth_s
 
 
 @router.get('/rms')
-async def get_all_rms_features(admin = Depends(get_current_admin)):
-    rms_features = influx.get_rms_features()
+async def get_rms_features(getDataModel: GetDataModel, admin = Depends(get_current_admin)):
+    nodeId = getDataModel.nodeId
+    measurementId = getDataModel.measurementId
+    
+    rms_features = influx.get_rms_features(nodeId=nodeId, measurmentId=measurementId)
     if rms_features:
         return JSONResponse(content=rms_features, status_code=status.HTTP_200_OK)
     
@@ -66,34 +70,17 @@ async def get_all_rms_features(admin = Depends(get_current_admin)):
     
     influx.write_rms_features(rms_features=rms_features)
     
-    return JSONResponse(content=rms_features, status_code=status.HTTP_200_OK)
-
-
-@router.get('/rms/{nodeId}')
-async def get_all_rms_features(nodeId: str, admin = Depends(get_current_admin)):
-    rms_features = influx.get_rms_features(nodeId=nodeId)
-    if rms_features:
-        return JSONResponse(content=rms_features, status_code=status.HTTP_200_OK)
-        
-    vibration_data = influx.get_vibration_data(nodeId=nodeId)
-    measurements_ids = influx.get_all_measurements_id(nodeId=nodeId)
-
-    transformer = Transformer(vibration_data=vibration_data)
-    matrices = transformer.get_matrices()
-
-    preprocessor = Preprocesser(matrices=matrices, nodes_ids=[nodeId], measurements_ids=measurements_ids)
-    rms_features = preprocessor.rms_feature_extraction()
-    
-    influx.write_rms_features(rms_features=rms_features)
-
     return JSONResponse(content=rms_features, status_code=status.HTTP_200_OK)
 
 
 @router.get('/psd')
-async def get_all_psd_features(admin = Depends(get_current_admin)):
-    psd_feature = influx.get_psd_features()
-    if psd_feature:
-        return JSONResponse(content=psd_feature, status_code=status.HTTP_200_OK)
+async def getß_psd_features(getDataModel: GetDataModel, admin = Depends(get_current_admin)):
+    nodeId = getDataModel.nodeId
+    measurementId = getDataModel.measurementId
+    
+    psd_features = influx.get_psd_features(nodeId=nodeId, measurmentId=measurementId)
+    if psd_features:
+        return JSONResponse(content=psd_features, status_code=status.HTTP_200_OK)
     
     vibration_data = influx.get_vibration_data()
     nodes_ids = influx.get_all_nodes_id()
@@ -110,21 +97,32 @@ async def get_all_psd_features(admin = Depends(get_current_admin)):
     return JSONResponse(content=psd_features, status_code=status.HTTP_200_OK)
 
 
-@router.get('/psd/{nodeId}')
-async def get_all_psd_features(nodeId: str, admin = Depends(get_current_admin)):
-    psd_feature = influx.get_psd_features(nodeId=nodeId)
-    if psd_feature:
-        return JSONResponse(content=psd_feature, status_code=status.HTTP_200_OK)
-        
-    vibration_data = influx.get_vibration_data(nodeId=nodeId)
-    measurements_ids = influx.get_all_measurements_id(nodeId=nodeId)
+@router.get('/peaks')
+async def get_harmonic_peaks(getDataModel: GetDataModel, admin = Depends(get_current_admin)):
+    nodeId = getDataModel.nodeId
+    measurementId = getDataModel.measurementId
+    
+    peaks = influx.get_harmonic_peaks(nodeId=nodeId, measurmentId=measurementId)
+    if peaks:
+        return JSONResponse(content=peaks, status_code=status.HTTP_200_OK)
+    
+    vibration_data = influx.get_vibration_data()
+    nodes_ids = influx.get_all_nodes_id()
+    measurements_ids = influx.get_all_measurements_id()
 
     transformer = Transformer(vibration_data=vibration_data)
     matrices = transformer.get_matrices()
 
-    preprocessor = Preprocesser(matrices=matrices, nodes_ids=[nodeId], measurements_ids=measurements_ids)
+    preprocessor = Preprocesser(matrices=matrices, nodes_ids=nodes_ids, measurements_ids=measurements_ids)  
     psd_features = preprocessor.psd_feature_extraction()
     
     influx.write_psd_features(psd_features=psd_features)
-
+    
     return JSONResponse(content=psd_features, status_code=status.HTTP_200_OK)
+
+
+@router.delete('/cachedData')
+async def delete_cached_processed_data(admin = Depends(get_current_admin)):
+    influx.clear_cached_data()
+    
+    return JSONResponse(content='Cached data deleted successfully!', status_code=status.HTTP_200_OK)
