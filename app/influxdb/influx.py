@@ -13,7 +13,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 class InfluxDB:
     MAIN_TABLES = ['vibration_measurment']
-    ALL_TABLES = MAIN_TABLES.extend(['psd_feature', 'rms_feature'])
+    ALL_TABLES = MAIN_TABLES.extend(['psd_feature', 'rms_feature', 'harmonic_peaks'])
 
     def __init__(self):
         self.client = InfluxDBClient(url=INFLUXDB_URI, org=INFLUXDB_ORG, token=INFLUXDB_TOKEN)
@@ -213,6 +213,49 @@ class InfluxDB:
         for r in query_result:
             results[r['nodeId']][r['measurementId']].append({
                 'psd_value': r['psd_value'],
+                'frequency': r['frequency']
+            })
+
+        return results
+    
+    
+    def write_harmonic_peaks(self, harmonic_peaks: defaultdict(lambda: defaultdict(lambda: []))):
+        points = []
+
+        for nId, measurements in harmonic_peaks.items():
+            for mId, psd in measurements.items():
+                for i, feature in enumerate(psd):
+                    points.append(Point('harmonic_peaks')\
+                                    .tag('nodeId', nId)\
+                                        .tag('measurementId', mId)\
+                                            .tag('frequency', feature['frequency'])\
+                                                .tag('index', i)\
+                                                    .field('psd_value', feature['psd_value'])\
+                                                        .time(time=datetime.utcnow()))
+                    
+        self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
+
+
+    def get_harmonic_peaks(self, nodeId = None, measurmentId = None):
+        filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
+        filter_by_measurment = f'|> filter(fn:(r) => r.measurmentId == "{measurmentId}")'
+
+        query = f'from(bucket:"{INFLUXDB_BUCKET}")\
+        |> range(start: {-1 * PROCESSED_DATA_EXPIRATION_TIME}m)\
+        |> filter(fn:(r) => r._measurement == "harmonic_peaks")\
+        {filter_by_node if nodeId is not None else ""}\
+        {filter_by_measurment if measurmentId is not None else ""}\
+        |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId", "frequency", "index"])\
+        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
+        |> yield()'
+
+        query_result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
+        query_result = json.loads(query_result.to_json(orient='records'))
+
+        results = defaultdict(lambda: defaultdict(lambda: []))
+        for r in query_result:
+            results[r['nodeId']][r['measurementId']].append({
+                'harmonic_peaks': r['harmonic_peaks'],
                 'frequency': r['frequency']
             })
 
