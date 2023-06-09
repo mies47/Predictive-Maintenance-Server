@@ -60,7 +60,6 @@ class InfluxDB:
 
         results = defaultdict(lambda: defaultdict(lambda: []))
         for r in query_result:
-            print(r)
             results[r['nodeId']][r['measurementId']].append({
                 'x': r['x'],
                 'y': r['y'],
@@ -127,7 +126,7 @@ class InfluxDB:
 
     def get_rms_features(self, nodeId = None, measurmentId = None):
         filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
-        filter_by_measurment = f'|> filter(fn:(r) => r.measurmentId == "{measurmentId}")'
+        filter_by_measurment = f'|> filter(fn:(r) => r.measurementId == "{measurmentId}")'
 
         query = f'from(bucket:"{INFLUXDB_BUCKET}")\
         |> range(start: {-1 * PROCESSED_DATA_EXPIRATION_TIME}m)\
@@ -143,7 +142,6 @@ class InfluxDB:
 
         results = defaultdict(lambda: defaultdict(lambda: {}))
         for r in query_result:
-            print(r)
             results[r['nodeId']][r['measurementId']] = {
                 'x': r['x_rms_value'],
                 'y': r['y_rms_value'],
@@ -172,7 +170,7 @@ class InfluxDB:
 
     def get_psd_features(self, nodeId = None, measurmentId = None):
         filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
-        filter_by_measurment = f'|> filter(fn:(r) => r.measurmentId == "{measurmentId}")'
+        filter_by_measurment = f'|> filter(fn:(r) => r.measurementId == "{measurmentId}")'
 
         query = f'from(bucket:"{INFLUXDB_BUCKET}")\
         |> range(start: {-1 * PROCESSED_DATA_EXPIRATION_TIME}m)\
@@ -215,7 +213,7 @@ class InfluxDB:
 
     def get_harmonic_peaks(self, nodeId = None, measurmentId = None):
         filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
-        filter_by_measurment = f'|> filter(fn:(r) => r.measurmentId == "{measurmentId}")'
+        filter_by_measurment = f'|> filter(fn:(r) => r.measurementId == "{measurmentId}")'
 
         query = f'from(bucket:"{INFLUXDB_BUCKET}")\
         |> range(start: {-1 * PROCESSED_DATA_EXPIRATION_TIME}m)\
