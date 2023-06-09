@@ -12,8 +12,8 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 
 class InfluxDB:
-    MAIN_TABLES = ['vibration_measurment']
-    ALL_TABLES = MAIN_TABLES.extend(['psd_feature', 'rms_feature', 'harmonic_peaks'])
+    MAIN_MEASUREMENT = ['vibration_measurement']
+    ALL_MEASUREMENTS = MAIN_MEASUREMENT + ['psd_feature', 'rms_feature', 'harmonic_peaks']
 
     def __init__(self):
         self.client = InfluxDBClient(url=INFLUXDB_URI, org=INFLUXDB_ORG, token=INFLUXDB_TOKEN)
@@ -29,28 +29,16 @@ class InfluxDB:
             for measurementId, measurement in nodeModel.measurements.items():
                 for i, vibrationData in enumerate(measurement.data):
                     
-                    x_point = Point('vibration_measurement')\
+                    new_point = Point('vibration_measurement')\
                         .tag('nodeId', nodeId)\
                             .tag('measurementId', measurementId)\
                                 .tag('index', i)\
                                     .field('x', vibrationData.x)\
-                                        .time(time=datetime.utcfromtimestamp(measurement.time))
-                
-                    y_point = Point('vibration_measurement')\
-                        .tag('nodeId', nodeId)\
-                            .tag('measurementId', measurementId)\
-                                .tag('index', i)\
-                                    .field('y', vibrationData.y)\
-                                        .time(time=datetime.utcfromtimestamp(measurement.time))
+                                        .field('y', vibrationData.y)\
+                                            .field('z', vibrationData.z)\
+                                                .time(time=datetime.utcfromtimestamp(measurement.time))
                     
-                    z_point = Point('vibration_measurement')\
-                        .tag('nodeId', nodeId)\
-                            .tag('measurementId', measurementId)\
-                                .tag('index', i)\
-                                    .field('z', vibrationData.z)\
-                                        .time(time=datetime.utcfromtimestamp(measurement.time))
-                    
-                    points.extend([x_point, y_point, z_point])
+                    points.append(new_point)
 
         self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 
@@ -123,27 +111,16 @@ class InfluxDB:
 
         for nId, measurements in rms_features.items():
             for mId, rms in measurements.items():
-                insertion_time = datetime.utcnow()
 
-                x_point = Point('rms_feature')\
+                new_point = Point('rms_feature')\
                                 .tag('nodeId', nId)\
                                     .tag('measurementId', mId)\
                                         .field('x_rms_value', rms['x'])\
-                                            .time(time=insertion_time)
-
-                y_point = Point('rms_feature')\
-                                .tag('nodeId', nId)\
-                                    .tag('measurementId', mId)\
-                                        .field('y_rms_value', rms['y'])\
-                                            .time(time=insertion_time)
+                                            .field('y_rms_value', rms['y'])\
+                                                .field('z_rms_value', rms['z'])\
+                                                    .time(time=datetime.utcnow())
                                             
-                z_point = Point('rms_feature')\
-                                .tag('nodeId', nId)\
-                                    .tag('measurementId', mId)\
-                                        .field('z_rms_value', rms['z'])\
-                                            .time(time=insertion_time)
-                                            
-                points.extend([x_point, y_point, z_point])
+                points.append(new_point)
                     
         self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 
@@ -185,9 +162,9 @@ class InfluxDB:
                     points.append(Point('psd_feature')\
                                     .tag('nodeId', nId)\
                                         .tag('measurementId', mId)\
-                                            .tag('frequency', feature['frequency'])\
-                                                .tag('index', i)\
-                                                    .field('psd_value', feature['psd_value'])\
+                                            .tag('index', i)\
+                                                .field('psd_value', feature['psd_value'])\
+                                                     .field('frequency', feature['frequency'])\
                                                         .time(time=datetime.utcnow()))
                     
         self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
@@ -223,16 +200,16 @@ class InfluxDB:
         points = []
 
         for nId, measurements in harmonic_peaks.items():
-            for mId, psd in measurements.items():
-                for i, feature in enumerate(psd):
+            for mId, peaks in measurements.items():
+                for i, feature in enumerate(peaks):
                     points.append(Point('harmonic_peaks')\
                                     .tag('nodeId', nId)\
                                         .tag('measurementId', mId)\
-                                            .tag('frequency', feature['frequency'])\
-                                                .tag('index', i)\
-                                                    .field('psd_value', feature['psd_value'])\
+                                            .tag('index', i)\
+                                                .field('peak_value', feature['peak_value'])\
+                                                    .field('frequency', feature['frequency'])\
                                                         .time(time=datetime.utcnow()))
-                    
+
         self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 
 
@@ -255,7 +232,7 @@ class InfluxDB:
         results = defaultdict(lambda: defaultdict(lambda: []))
         for r in query_result:
             results[r['nodeId']][r['measurementId']].append({
-                'harmonic_peaks': r['harmonic_peaks'],
+                'peak_value': r['peak_value'],
                 'frequency': r['frequency']
             })
 
@@ -263,20 +240,16 @@ class InfluxDB:
     
     
     def clear_cached_data(self):
-        import datetime
-
         delete_api = self.client.delete_api()
         
-        for table in InfluxDB.ALL_TABLES:
-            if table not in InfluxDB.MAIN_TABLES:
-                delete_api.delete(start='1970-01-01T00:00:00Z', stop=datetime.datetime.now(), predicate=f'_measurement="{table}"', bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
+        for measurement in InfluxDB.ALL_MEASUREMENTS:
+            if measurement not in InfluxDB.MAIN_MEASUREMENT:
+                delete_api.delete(start='1970-01-01T00:00:00Z', stop=datetime.now(), predicate=f'_measurement="{measurement}"', bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
         
 
     
     def clear_database(self):
-        import datetime
-
         delete_api = self.client.delete_api()
         
-        for table in InfluxDB.ALL_TABLES:
-            delete_api.delete(start='1970-01-01T00:00:00Z', stop=datetime.datetime.now(), predicate=f'_measurement="{table}"', bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
+        for measurement in InfluxDB.ALL_MEASUREMENTS:
+            delete_api.delete(start='1970-01-01T00:00:00Z', stop=datetime.now(), predicate=f'_measurement="{measurement}"', bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
