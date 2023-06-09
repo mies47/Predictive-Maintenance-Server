@@ -5,7 +5,6 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from ..influxdb.influx import InfluxDB
 from ..postgresdb.postgres import SessionLocal
 from ..postgresdb.models import Admin
-from ..models.AnalyticsDataModel import GetDataModel
 from ..auth.handler import decodeJWT
 from ..analytics.transformer import Transformer
 from ..analytics.preprocesser import Preprocesser
@@ -50,9 +49,7 @@ async def get_current_admin(token: HTTPAuthorizationCredentials = Depends(auth_s
 
 
 @router.get('/rms')
-async def get_rms_features(getDataModel: GetDataModel, admin = Depends(get_current_admin)):
-    nodeId = getDataModel.nodeId
-    measurementId = getDataModel.measurementId
+async def get_rms_features(nodeId: str = None, measurementId: str = None, admin = Depends(get_current_admin)):
     
     rms_features = influx.get_rms_features(nodeId=nodeId, measurmentId=measurementId)
     if rms_features:
@@ -74,10 +71,8 @@ async def get_rms_features(getDataModel: GetDataModel, admin = Depends(get_curre
 
 
 @router.get('/psd')
-async def getß_psd_features(getDataModel: GetDataModel, admin = Depends(get_current_admin)):
-    nodeId = getDataModel.nodeId
-    measurementId = getDataModel.measurementId
-    
+async def getß_psd_features(nodeId: str = None, measurementId: str = None, admin = Depends(get_current_admin)):
+        
     psd_features = influx.get_psd_features(nodeId=nodeId, measurmentId=measurementId)
     if psd_features:
         return JSONResponse(content=psd_features, status_code=status.HTTP_200_OK)
@@ -98,13 +93,11 @@ async def getß_psd_features(getDataModel: GetDataModel, admin = Depends(get_cur
 
 
 @router.get('/peaks')
-async def get_harmonic_peaks(getDataModel: GetDataModel, admin = Depends(get_current_admin)):
-    nodeId = getDataModel.nodeId
-    measurementId = getDataModel.measurementId
+async def get_harmonic_peaks(nodeId: str = None, measurementId: str = None, admin = Depends(get_current_admin)):
     
-    peaks = influx.get_harmonic_peaks(nodeId=nodeId, measurmentId=measurementId)
-    if peaks:
-        return JSONResponse(content=peaks, status_code=status.HTTP_200_OK)
+    harmonic_peaks = influx.get_harmonic_peaks(nodeId=nodeId, measurmentId=measurementId)
+    if harmonic_peaks:
+        return JSONResponse(content=harmonic_peaks, status_code=status.HTTP_200_OK)
     
     vibration_data = influx.get_vibration_data()
     nodes_ids = influx.get_all_nodes_id()
@@ -114,11 +107,11 @@ async def get_harmonic_peaks(getDataModel: GetDataModel, admin = Depends(get_cur
     matrices = transformer.get_matrices()
 
     preprocessor = Preprocesser(matrices=matrices, nodes_ids=nodes_ids, measurements_ids=measurements_ids)  
-    psd_features = preprocessor.psd_feature_extraction()
+    harmonic_peaks = preprocessor.harmonic_peak_feature_extraction()
     
-    influx.write_psd_features(psd_features=psd_features)
+    influx.write_harmonic_peaks(harmonic_peaks=harmonic_peaks)
     
-    return JSONResponse(content=psd_features, status_code=status.HTTP_200_OK)
+    return JSONResponse(content=harmonic_peaks, status_code=status.HTTP_200_OK)
 
 
 @router.delete('/cachedData')

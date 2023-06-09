@@ -156,8 +156,10 @@ class Preprocesser:
         harmonic_peak_feature = [(freqs[i], x[i]) for i in peaks_index]
         harmonic_peak_feature = sorted(harmonic_peak_feature, key=lambda t: t[1], reverse=True)
         harmonic_peak_feature = harmonic_peak_feature[:MAXIMUM_NUMBER_OF_PEAKS]
+        
+        result = [{'peak_value': peak_value, 'frequency': freq} for (freq, peak_value) in harmonic_peak_feature]
 
-        return harmonic_peak_feature
+        return result
 
 
     def harmonic_peak_feature_extraction(self):
