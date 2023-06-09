@@ -71,7 +71,7 @@ async def get_rms_features(nodeId: str = None, measurementId: str = None, admin 
 
 
 @router.get('/psd')
-async def getß_psd_features(nodeId: str = None, measurementId: str = None, admin = Depends(get_current_admin)):
+async def get_psd_features(nodeId: str = None, measurementId: str = None, admin = Depends(get_current_admin)):
         
     psd_features = influx.get_psd_features(nodeId=nodeId, measurmentId=measurementId)
     if psd_features:
