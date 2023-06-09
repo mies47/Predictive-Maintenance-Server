@@ -43,14 +43,17 @@ class InfluxDB:
         self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 
 
-    def get_vibration_data(self, nodeId: str = None):
+    def get_vibration_data(self, nodeId: str = None, measurementId: str = None):
         '''Returns all vibration data written in db if nodeId is None'''
 
         filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
+        filter_by_measurement = f'|> filter(fn:(r) => r.measurementId == "{measurementId}")'
+
         query = f'from(bucket:"{INFLUXDB_BUCKET}")\
         |> range(start: 0)\
         |> filter(fn:(r) => r._measurement == "vibration_measurement")\
         {filter_by_node if nodeId is not None else ""}\
+        {filter_by_measurement if measurementId is not None else ""}\
         |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId", "index"])\
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
         |> yield()'
@@ -124,15 +127,15 @@ class InfluxDB:
         self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 
 
-    def get_rms_features(self, nodeId = None, measurmentId = None):
+    def get_rms_features(self, nodeId = None, measurementId = None):
         filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
-        filter_by_measurment = f'|> filter(fn:(r) => r.measurementId == "{measurmentId}")'
+        filter_by_measurement = f'|> filter(fn:(r) => r.measurementId == "{measurementId}")'
 
         query = f'from(bucket:"{INFLUXDB_BUCKET}")\
         |> range(start: {-1 * PROCESSED_DATA_EXPIRATION_TIME}m)\
         |> filter(fn:(r) => r._measurement == "rms_feature")\
         {filter_by_node if nodeId is not None else ""}\
-        {filter_by_measurment if measurmentId is not None else ""}\
+        {filter_by_measurement if measurementId is not None else ""}\
         |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId"])\
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
         |> yield()'
@@ -168,15 +171,15 @@ class InfluxDB:
         self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 
 
-    def get_psd_features(self, nodeId = None, measurmentId = None):
+    def get_psd_features(self, nodeId = None, measurementId = None):
         filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
-        filter_by_measurment = f'|> filter(fn:(r) => r.measurementId == "{measurmentId}")'
+        filter_by_measurement = f'|> filter(fn:(r) => r.measurementId == "{measurementId}")'
 
         query = f'from(bucket:"{INFLUXDB_BUCKET}")\
         |> range(start: {-1 * PROCESSED_DATA_EXPIRATION_TIME}m)\
         |> filter(fn:(r) => r._measurement == "psd_feature")\
         {filter_by_node if nodeId is not None else ""}\
-        {filter_by_measurment if measurmentId is not None else ""}\
+        {filter_by_measurement if measurementId is not None else ""}\
         |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId", "frequency", "index"])\
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
         |> yield()'
@@ -211,15 +214,15 @@ class InfluxDB:
         self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 
 
-    def get_harmonic_peaks(self, nodeId = None, measurmentId = None):
+    def get_harmonic_peaks(self, nodeId = None, measurementId = None):
         filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
-        filter_by_measurment = f'|> filter(fn:(r) => r.measurementId == "{measurmentId}")'
+        filter_by_measurement = f'|> filter(fn:(r) => r.measurementId == "{measurementId}")'
 
         query = f'from(bucket:"{INFLUXDB_BUCKET}")\
         |> range(start: {-1 * PROCESSED_DATA_EXPIRATION_TIME}m)\
         |> filter(fn:(r) => r._measurement == "harmonic_peaks")\
         {filter_by_node if nodeId is not None else ""}\
-        {filter_by_measurment if measurmentId is not None else ""}\
+        {filter_by_measurement if measurementId is not None else ""}\
         |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId", "frequency", "index"])\
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
         |> yield()'
