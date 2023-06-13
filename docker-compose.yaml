@@ -22,7 +22,7 @@ services:
     volumes:
       - postgres-data:/data/postgres
     ports:
-      - 6000:5432
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
 
   influxdb:
     image: influxdb:2.6.1
