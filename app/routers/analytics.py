@@ -1,14 +1,10 @@
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, status, Depends
 from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from ..influxdb.influx import InfluxDB
-from ..postgresdb.postgres import SessionLocal
-from ..postgresdb.models import Admin
-from ..auth.handler import decodeJWT
 from ..analytics.transformer import Transformer
 from ..analytics.preprocesser import Preprocesser
-
+from app.deps import get_current_admin
 
 router = APIRouter(
     prefix='/analytics',
@@ -18,35 +14,7 @@ router = APIRouter(
     }
 )
 
-db = SessionLocal()
-
 influx = InfluxDB()
-
-auth_scheme = HTTPBearer()
-
-
-async def get_current_admin(token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail='Could not validate credentials',
-        headers={'WWW-Authenticate': 'Bearer'},
-    )
-    try:
-        payload = decodeJWT(token=token.credentials)
-        email: str = payload.get('email')
-        if email is None:
-            raise credentials_exception
-
-    except:
-        raise credentials_exception
-    
-    admin = db.query(Admin).filter(Admin.email == email).first() 
-        
-    if admin is None:
-        raise credentials_exception
-
-    return admin
-
 
 @router.get('/rms')
 async def get_rms_features(nodeId: str = None, measurementId: str = None, admin = Depends(get_current_admin)):
