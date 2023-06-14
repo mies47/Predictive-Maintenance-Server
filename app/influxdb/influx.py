@@ -249,7 +249,7 @@ class InfluxDB:
         
 
     
-    def clear_database(self):
+    def clear_vibration_data(self):
         delete_api = self.client.delete_api()
         
         for measurement in InfluxDB.ALL_MEASUREMENTS:
