@@ -3,7 +3,7 @@ import numpy as np
 from .ransac import RANSAC
 from ..utils.constants import SMOOTHING_WINDOW_SIZE
 
-from typing import List, Tuple
+from typing import List, Dict
 from copy import deepcopy
 
 
@@ -13,7 +13,7 @@ class RUL:
         self.ransac = RANSAC()
 
 
-    def _find_closest_point_index(self, peak_features: List[Tuple[float, float]], peak: Tuple[float, float]):
+    def _find_closest_point_index(self, peak_features: List[Dict[str, float]], peak: Dict[str, float]):
         if not peak_features:
             return None
 
@@ -23,7 +23,7 @@ class RUL:
         return np.abs(freqs - freq_to_find).argmin()
 
 
-    def _harmonic_peak_distance(self, p_1: List[Tuple[float, float]], p_2: List[Tuple[float, float]]) -> float:
+    def _harmonic_peak_distance(self, p_1: List[Dict[float, float]], p_2: List[Dict[float, float]]) -> float:
         '''This function estimates the dissimilarity between two harmonic peaks. The model learning process in based on this function.'''
 
         q1 = deepcopy(p_1)

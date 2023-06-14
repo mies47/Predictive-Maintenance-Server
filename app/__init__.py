@@ -20,13 +20,6 @@ def create_database():
         db.commit()
 
 
-def clear_time_series_database():
-    from .influxdb.influx import InfluxDB
-
-    influx = InfluxDB()
-    influx.clear_database()
-
-
 def initialize_server():
     from .routers import data, login, signup, analytics
     
@@ -38,9 +31,5 @@ def initialize_server():
     app.include_router(analytics.router, prefix=API_PREFIX)
     
     create_database()
-
-
-    '''Uncomment this line when you want to make influxdb empty'''
-    # clear_time_series_database()
     
     return app
