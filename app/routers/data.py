@@ -58,7 +58,7 @@ async def send_data(dataList: Dict[str, NodeModel], gateway = Depends(get_curren
     return JSONResponse(content='', status_code=status.HTTP_202_ACCEPTED)
 
 
-@router.delete('/data')
+@router.delete('')
 async def delete_vibration_data(admin = Depends(get_current_admin)):
     influx.clear_vibration_data()
     
