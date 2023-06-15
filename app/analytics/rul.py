@@ -3,8 +3,7 @@ import numpy as np
 from .ransac import RANSAC
 from ..utils.constants import SMOOTHING_WINDOW_SIZE
 
-from typing import List, Dict
-from copy import deepcopy
+from typing import List, Dict, Tuple
 
 
 class RUL:
@@ -13,7 +12,7 @@ class RUL:
         self.ransac = RANSAC()
 
 
-    def _find_closest_point_index(self, peak_features: List[Dict[str, float]], peak: Dict[str, float]):
+    def _find_closest_point_index(self, peak_features: List[Tuple[float, float]], peak: Tuple[float, float]):
         if not peak_features:
             return None
 
@@ -23,21 +22,21 @@ class RUL:
         return np.abs(freqs - freq_to_find).argmin()
 
 
-    def _harmonic_peak_distance(self, p_1: List[Dict[float, float]], p_2: List[Dict[float, float]]) -> float:
-        '''This function estimates the dissimilarity between two harmonic peaks. The model learning process in based on this function.'''
+    def _harmonic_peak_distance(self, p_1: List[Dict[str, float]], p_2: List[Dict[str, float]]) -> float:
+        '''This function estimates the dissimilarity between two harmonic peak features. The model learning process in based on this function.'''
 
-        q1 = deepcopy(p_1)
-        q2 = deepcopy(p_2)
+        q1 = [(harmonic_peak['frequency'], harmonic_peak['peak_value']) for harmonic_peak in p_1]
+        q2 = [(harmonic_peak['frequency'], harmonic_peak['peak_value']) for harmonic_peak in p_2]
 
         # Normalizing input peaks
         maximum_peak = 0
         maximum_frequency = 0
 
-        for freq, peak in p_1:
+        for freq, peak in q1:
             maximum_peak = np.maximum(peak, maximum_peak)
             maximum_frequency = np.maximum(freq, maximum_frequency)
 
-        for freq, peak in p_2:
+        for freq, peak in q2:
             maximum_peak = np.maximum(peak, maximum_peak)
             maximum_frequency = np.maximum(freq, maximum_frequency)
 
