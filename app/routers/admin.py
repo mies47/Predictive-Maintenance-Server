@@ -1,7 +1,7 @@
-from fastapi import APIRouter, status, HTTPException, Depends
+from fastapi import APIRouter, status, Depends
 
-from ..postgresdb.postgres import SessionLocal
 from ..models.CredentialsModel import AdminOut
+
 from app.deps import get_current_admin
 
 
@@ -10,8 +10,6 @@ router = APIRouter(
     tags=['admin'],
     responses={404: {'description': 'Not found'}},
 )
-
-db = SessionLocal()
 
 @router.get(
     '/me',
