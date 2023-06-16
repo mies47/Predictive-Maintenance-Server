@@ -31,6 +31,7 @@ class Preprocesser:
 
     def _normalize_vibration_data(self):
         '''Normalized the input data to remove gravity effect'''
+
         if self.matrices is None:
             raise ValueError('Matrices are not created!')
 
