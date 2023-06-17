@@ -6,7 +6,7 @@ from typing import Annotated
 
 class GatewayLoginModel(BaseModel):
     mac: str = Required
-    password: Annotated[str, Query(min_length = 8)] = Required
+    password: Annotated[str, Query(min_length = 5)] = Required
     
     class Config:
         orm_mode = True
@@ -14,7 +14,7 @@ class GatewayLoginModel(BaseModel):
 
 class AdminLoginModel(BaseModel):
     email: EmailStr = Required
-    password: Annotated[str, Query(min_length = 8)] = Required
+    password: Annotated[str, Query(min_length = 5)] = Required
     
     class Config:
         orm_mode = True
@@ -31,6 +31,15 @@ class AdminSignupModel(AdminLoginModel):
 class AdminOut(BaseModel):
     name: str
     email: EmailStr
+    is_verified: bool
+
+    class Config:
+        orm_mode = True
+        
+
+class GatewayOut(BaseModel):
+    mac: str
+    is_verified: bool
 
     class Config:
         orm_mode = True

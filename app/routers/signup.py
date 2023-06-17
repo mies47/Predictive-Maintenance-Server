@@ -1,11 +1,12 @@
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, status, HTTPException, Depends
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 from werkzeug.security import generate_password_hash
 
 from ..models.CredentialsModel import AdminSignupModel, GatewaySignupModel
-from ..postgresdb.postgres import SessionLocal
 from ..postgresdb.models import Gateway, Admin
 from ..auth.handler import signJWT
+from ..auth.deps import get_db
 from ..utils.env_vars import HASH_ALGORITHM
 
 
@@ -15,11 +16,9 @@ router = APIRouter(
     responses={404: {'description': 'Not found'}},
 )
 
-db = SessionLocal()
-
 
 @router.post('/gateway')
-async def gateway_signup(signupModel: GatewaySignupModel):
+async def gateway_signup(signupModel: GatewaySignupModel, db: Session = Depends(get_db)):
     gateway = db.query(Gateway).filter(Gateway.mac == signupModel.mac).first()
     
     if gateway:
@@ -36,7 +35,7 @@ async def gateway_signup(signupModel: GatewaySignupModel):
   
 
 @router.post('/admin')
-async def admin_signup(signupModel: AdminSignupModel):
+async def admin_signup(signupModel: AdminSignupModel, db: Session = Depends(get_db)):
     admin = db.query(Admin).filter(Admin.email == signupModel.email).first()
     
     if admin:

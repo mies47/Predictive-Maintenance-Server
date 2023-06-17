@@ -19,6 +19,7 @@ router = APIRouter(
     }
 )
 
+
 influx = InfluxDB()
 
 

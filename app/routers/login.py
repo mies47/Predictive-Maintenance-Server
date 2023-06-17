@@ -1,11 +1,12 @@
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, status, HTTPException, Depends
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 from werkzeug.security import check_password_hash
 
 from ..models.CredentialsModel import AdminLoginModel, GatewayLoginModel
-from ..postgresdb.postgres import SessionLocal
 from ..postgresdb.models import Gateway, Admin
 from ..auth.handler import signJWT
+from ..auth.deps import get_db
 
 
 router = APIRouter(
@@ -14,11 +15,9 @@ router = APIRouter(
     responses={404: {'description': 'Not found'}},
 )
 
-db = SessionLocal()
-
 
 @router.post('/gateway')
-async def gateway_login(loginModel: GatewayLoginModel):
+async def gateway_login(loginModel: GatewayLoginModel, db: Session = Depends(get_db)):
     gateway = db.query(Gateway).filter(Gateway.mac == loginModel.mac).first()
     
     if not gateway:
@@ -35,7 +34,7 @@ async def gateway_login(loginModel: GatewayLoginModel):
   
 
 @router.post('/admin')
-async def admin_login(loginModel: AdminLoginModel):
+async def admin_login(loginModel: AdminLoginModel, db: Session = Depends(get_db)):
     admin = db.query(Admin).filter(Admin.email == loginModel.email).first()
     
     if not admin:
