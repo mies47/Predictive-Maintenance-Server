@@ -24,6 +24,11 @@ async def get_current_admin(token: HTTPAuthorizationCredentials = Depends(auth_s
         detail='Could not validate credentials',
         headers={'WWW-Authenticate': 'Bearer'},
     )
+    not_verified_exception = HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail='Admin is not verified yet',
+        headers={'WWW-Authenticate': 'Bearer'},
+    )
     try:
         payload = decodeJWT(token=token.credentials)
         email: str = payload.get('email')
@@ -37,6 +42,9 @@ async def get_current_admin(token: HTTPAuthorizationCredentials = Depends(auth_s
         
     if admin is None:
         raise credentials_exception
+    
+    if not admin.is_verified:
+        raise not_verified_exception
 
     return admin
 
@@ -45,6 +53,11 @@ async def get_current_gateway(token: HTTPAuthorizationCredentials = Depends(auth
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail='Could not validate credentials',
+        headers={'WWW-Authenticate': 'Bearer'},
+    )
+    not_verified_exception = HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail='Gateway is not verified yet',
         headers={'WWW-Authenticate': 'Bearer'},
     )
     try:
@@ -60,5 +73,9 @@ async def get_current_gateway(token: HTTPAuthorizationCredentials = Depends(auth
         
     if gateway is None:
         raise credentials_exception
+
+
+    if not gateway.is_verified:
+        raise not_verified_exception
 
     return gateway
