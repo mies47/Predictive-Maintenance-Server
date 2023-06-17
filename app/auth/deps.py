@@ -1,9 +1,10 @@
 from fastapi import HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from app.postgresdb.postgres import SessionLocal
-from app.postgresdb.models import Admin, Gateway
-from app.auth.handler import decodeJWT
+from ..postgresdb.postgres import SessionLocal
+from ..postgresdb.models import Admin, Gateway
+
+from .handler import decodeJWT
 
 db = SessionLocal()
 

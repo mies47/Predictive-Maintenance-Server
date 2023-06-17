@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from ..influxdb.influx import InfluxDB
 from ..analytics.transformer import Transformer
 from ..analytics.preprocesser import Preprocesser
-from app.deps import get_current_admin
+from ..auth.deps import get_current_admin
 
 router = APIRouter(
     prefix='/analytics',

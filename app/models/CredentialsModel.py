@@ -1,17 +1,20 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Required
+from fastapi import Query
+
+from typing import Annotated
 
 
 class GatewayLoginModel(BaseModel):
-    mac: str
-    password: str
+    mac: str = Required
+    password: Annotated[str, Query(min_length = 8)] = Required
     
     class Config:
         orm_mode = True
 
 
 class AdminLoginModel(BaseModel):
-    email: str
-    password: str
+    email: EmailStr = Required
+    password: Annotated[str, Query(min_length = 8)] = Required
     
     class Config:
         orm_mode = True
@@ -22,12 +25,12 @@ class GatewaySignupModel(GatewayLoginModel):
 
 
 class AdminSignupModel(AdminLoginModel):
-    name: str
+    name: Annotated[str, Query(min_length = 2)] = Required
 
 
 class AdminOut(BaseModel):
     name: str
-    email: str
+    email: EmailStr
 
     class Config:
         orm_mode = True
