@@ -22,7 +22,7 @@ def create_database():
 
 
 def initialize_server():
-    from .routers import admin, data, login, signup, analytics
+    from .routers import admin, gateway, data, login, signup, analytics
     
     app = FastAPI()
 
@@ -40,6 +40,7 @@ def initialize_server():
     )
     
     app.include_router(admin.router, prefix=API_PREFIX)
+    app.include_router(gateway.router, prefix=API_PREFIX)
     app.include_router(data.router, prefix=API_PREFIX)
     app.include_router(login.router, prefix=API_PREFIX)
     app.include_router(signup.router, prefix=API_PREFIX)

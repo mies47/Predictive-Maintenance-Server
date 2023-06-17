@@ -1,17 +1,24 @@
 from fastapi import HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
 
 from ..postgresdb.postgres import SessionLocal
 from ..postgresdb.models import Admin, Gateway
 
 from .handler import decodeJWT
 
-db = SessionLocal()
-
 auth_scheme = HTTPBearer()
 
 
-async def get_current_admin(token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+async def get_current_admin(token: HTTPAuthorizationCredentials = Depends(auth_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail='Could not validate credentials',
@@ -34,7 +41,7 @@ async def get_current_admin(token: HTTPAuthorizationCredentials = Depends(auth_s
     return admin
 
 
-async def get_current_gateway(token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
+async def get_current_gateway(token: HTTPAuthorizationCredentials = Depends(auth_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail='Could not validate credentials',
