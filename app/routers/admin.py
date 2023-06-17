@@ -2,7 +2,7 @@ from fastapi import APIRouter, status, Depends
 
 from ..models.CredentialsModel import AdminOut
 
-from app.deps import get_current_admin
+from ..auth.deps import get_current_admin
 
 
 router = APIRouter(

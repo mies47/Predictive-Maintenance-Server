@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from ..models.SendDataModel import NodeModel
 from ..influxdb.influx import InfluxDB
-from app.deps import get_current_admin, get_current_gateway
+from ..auth.deps import get_current_admin, get_current_gateway
 
 from pydantic import parse_obj_as
 
