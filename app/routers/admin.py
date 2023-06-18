@@ -48,7 +48,7 @@ def verify_admin(adminVerificationModel: AdminVerificationModel, admin: AdminOut
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, 
                              detail='Entered admin is already verified')
         
-    admin_to_verify.is_verified = True
+    admin_to_verify.verify()
     db.commit()
     
     return JSONResponse(status_code=status.HTTP_200_OK, 
