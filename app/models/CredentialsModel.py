@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr, Required
+from datetime import datetime
 from fastapi import Query
 
 from typing import Annotated
@@ -31,6 +32,9 @@ class AdminSignupModel(AdminLoginModel):
 class AdminOut(BaseModel):
     name: str
     email: EmailStr
+    signed_up_at: datetime | None
+    last_login_at: datetime | None
+    verified_at: datetime | None
     is_verified: bool
 
     class Config:
@@ -39,6 +43,9 @@ class AdminOut(BaseModel):
 
 class GatewayOut(BaseModel):
     mac: Annotated[str, Query(min_length = 5)]
+    signed_up_at: datetime | None
+    last_login_at: datetime | None
+    verified_at: datetime | None
     is_verified: bool
 
     class Config:

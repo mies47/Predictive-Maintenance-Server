@@ -25,6 +25,10 @@ async def gateway_login(loginModel: GatewayLoginModel, db: Session = Depends(get
                              detail='Entered gateway does not exist or mac is incorrect')
     
     if check_password_hash(gateway.password, loginModel.password):
+
+        gateway.login()
+        db.commit()
+
         return JSONResponse(status_code=status.HTTP_200_OK, 
                             content={'token': signJWT('mac', gateway.mac)})
       
@@ -42,6 +46,10 @@ async def admin_login(loginModel: AdminLoginModel, db: Session = Depends(get_db)
                              detail='Entered admin does not exist or email is incorrect')
     
     if check_password_hash(admin.password, loginModel.password):
+
+        admin.login()
+        db.commit()
+
         return JSONResponse(status_code=status.HTTP_200_OK, 
                             content={'token': signJWT('email', admin.email)})
       
