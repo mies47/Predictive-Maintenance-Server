@@ -9,7 +9,6 @@ import pandas as pd
 from copy import deepcopy
 
 from typing import List, Dict
-from collections import defaultdict
 from dotenv import load_dotenv
 
 
@@ -19,8 +18,8 @@ load_dotenv()
 
 BASE_URL = f'http://{os.getenv("SERVER_HOST")}:{os.getenv("SERVER_PORT")}{os.getenv("API_PREFIX")}'
 
-DATASET_MACHINES = [uuid.uuid4().hex for _ in range(5)]
-DATASET_MEASUREMENTS = [uuid.uuid4().hex for _ in range(20)]
+DATASET_MACHINES = [uuid.uuid4().hex for _ in range(4)]
+DATASET_MEASUREMENTS = [uuid.uuid4().hex for _ in range(10)]
 
 
 class ModelJsonObject(json.JSONEncoder):
@@ -76,7 +75,7 @@ class Node:
 
 if __name__ == '__main__':
 	df = pd.read_csv('./datasets/accelerometer.csv', usecols=['x', 'y', 'z'])
-	datasetLength = 20000
+	datasetLength = 10000
 	machinesLength = len(DATASET_MACHINES)
 	measurementLength = len(DATASET_MEASUREMENTS)
 
