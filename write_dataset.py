@@ -37,6 +37,8 @@ if __name__ == '__main__':
     
     t1 = int(time.time() - 20 * 60 * 60 * 24)
     t2 = int(time.time())
+    measurementTime = None
+    lastMeasurement = None
     
     points = []
     
@@ -52,6 +54,10 @@ if __name__ == '__main__':
         nodeId = DATASET_MACHINES[machineIndex]
         measurementId = DATASET_MEASUREMENTS[measurementIndex]
         
+        if lastMeasurement != measurementId:
+            lastMeasurement = measurementId
+            measurementTime = random.randint(t1, t2)
+        
         new_point = Point('vibration_measurement')\
                         .tag('nodeId', nodeId)\
                             .tag('measurementId', measurementId)\
@@ -59,7 +65,7 @@ if __name__ == '__main__':
                                     .field('x', row['x'])\
                                         .field('y', row['y'])\
                                             .field('z', row['z'])\
-                                                .time(time=datetime.utcfromtimestamp(random.randint(t1, t2)))
+                                                .time(time=datetime.utcfromtimestamp(measurementTime))
                                                 
         points.append(new_point)
         

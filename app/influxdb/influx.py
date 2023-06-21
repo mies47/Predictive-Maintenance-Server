@@ -79,7 +79,7 @@ class InfluxDB:
         |> filter(fn:(r) => r._measurement == "vibration_measurement")\
         |> keep(columns: ["_time", "_field", "_value", "nodeId"])\
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
-        |> distinct(column: "nodeId")'
+        |> unique(column: "nodeId")'
 
         query_result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
         query_result = json.loads(query_result.to_json(orient='records'))
@@ -104,6 +104,25 @@ class InfluxDB:
         query_result = json.loads(query_result.to_json(orient='records'))
 
         results = [r['measurementId'] for r in query_result]
+
+        return results
+    
+    
+    def get_all_measurements(self, nodeId: str = None):
+        filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
+
+        query = f'from(bucket:"{INFLUXDB_BUCKET}")\
+        |> range(start: 0)\
+        |> filter(fn:(r) => r._measurement == "vibration_measurement")\
+        {filter_by_node if nodeId is not None else ""}\
+        |> keep(columns: ["_time", "_field", "_value", "measurementId"])\
+        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
+        |> unique(column: "measurementId")'
+
+        query_result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
+        query_result = json.loads(query_result.to_json(orient='records'))
+
+        results = [{'measurementId': r['measurementId'], 'time': r['_time'] // 1000} for r in query_result]
 
         return results
     
@@ -165,7 +184,7 @@ class InfluxDB:
                                         .tag('measurementId', mId)\
                                             .tag('index', i)\
                                                 .field('psd_value', feature['psd_value'])\
-                                                     .field('frequency', feature['frequency'])\
+                                                    .field('frequency', feature['frequency'])\
                                                         .time(time=datetime.utcnow()))
                     
         self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
