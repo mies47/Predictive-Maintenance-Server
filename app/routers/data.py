@@ -30,9 +30,16 @@ async def get_all_data(admin = Depends(get_current_admin)):
     return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
 
-@router.get('/{nodeId}')
+@router.get('/node/{nodeId}')
 async def get_node_data(nodeId: str, admin = Depends(get_current_admin)):
     result = influx.get_vibration_data(nodeId=nodeId)
+
+    return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+
+
+@router.get('/measurement/{measurementId}')
+async def get_node_data(measurementId: str, admin = Depends(get_current_admin)):
+    result = influx.get_vibration_data(measurementId=measurementId)
 
     return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
