@@ -38,7 +38,7 @@ async def get_node_data(nodeId: str, admin = Depends(get_current_admin)):
 
 
 @router.get('/measurement/{measurementId}')
-async def get_node_data(measurementId: str, admin = Depends(get_current_admin)):
+async def get_measurement_data(measurementId: str, admin = Depends(get_current_admin)):
     result = influx.get_vibration_data(measurementId=measurementId)
 
     return JSONResponse(content=result, status_code=status.HTTP_200_OK)
