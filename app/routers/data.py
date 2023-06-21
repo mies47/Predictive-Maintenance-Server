@@ -23,14 +23,14 @@ router = APIRouter(
 influx = InfluxDB()
 
 
-@router.get('/allData')
+@router.get('')
 async def get_all_data(admin = Depends(get_current_admin)):
     result = influx.get_vibration_data()
 
     return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
 
-@router.get('/nodeData/{nodeId}')
+@router.get('/{nodeId}')
 async def get_node_data(nodeId: str, admin = Depends(get_current_admin)):
     result = influx.get_vibration_data(nodeId=nodeId)
 
