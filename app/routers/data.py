@@ -53,7 +53,7 @@ async def get_nodes_id(admin = Depends(get_current_admin)):
 
 @router.get('/allMeasurements')
 async def get_measurments_id(admin = Depends(get_current_admin)):
-    result = influx.get_all_measurements_id()
+    result = influx.get_all_measurements()
 
     return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
