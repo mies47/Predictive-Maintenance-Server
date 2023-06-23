@@ -9,7 +9,7 @@ from typing import List, Dict, Tuple
 class RUL:
 
     def __init__(self):
-        self.ransac = RANSAC()
+        self._ransac = RANSAC()
 
 
     def _find_closest_point_index(self, peak_features: List[Tuple[float, float]], peak: Tuple[float, float]):
@@ -68,5 +68,8 @@ class RUL:
         return (summation + np.sum(list(map(lambda point: point[1], q2)))) / (counter + len(q2))
 
 
-    def get_rul_model(self) -> RANSAC:
-        return self.ransac
+    def fit_model(self, measurements, harmonic_peaks, labeled_harmonic_peaks):
+        X = np.arange(start=0, stop=len(measurements), step=1)
+        y = np.array([self._harmonic_peak_distance(harmonic_peaks[measurement], labeled_harmonic_peaks) for measurement in measurements], dtype=np.float64)
+        
+        return self._ransac.fit(X=X, y=y)

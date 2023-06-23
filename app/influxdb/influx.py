@@ -98,7 +98,7 @@ class InfluxDB:
         {filter_by_node if nodeId is not None else ""}\
         |> keep(columns: ["_time", "_field", "_value", "measurementId"])\
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
-        |> distinct(column: "measurementId")'
+        |> unique(column: "measurementId")'
 
         query_result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
         query_result = json.loads(query_result.to_json(orient='records'))
