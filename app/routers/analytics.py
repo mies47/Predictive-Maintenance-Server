@@ -82,6 +82,14 @@ async def get_harmonic_peaks(nodeId: str = None, measurementId: str = None, admi
     return JSONResponse(content=harmonic_peaks, status_code=status.HTTP_200_OK)
 
 
+@router.get('/rul')
+async def get_rul_values(nodeId: str = None, admin = Depends(get_current_admin)):
+    
+    rul_values = influx.get_rul_values(nodeId=nodeId)
+    if rul_values:
+        return JSONResponse(content=rul_values, status_code=status.HTTP_200_OK)
+    
+
 @router.delete('/cachedData')
 async def delete_cached_processed_data(admin = Depends(get_current_admin)):
     influx.clear_cached_data()
