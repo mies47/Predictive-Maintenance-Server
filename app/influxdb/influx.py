@@ -259,6 +259,23 @@ class InfluxDB:
         return results
     
     
+    def get_rul_values(self, nodeId = None):
+        filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
+        
+        query = f'from(bucket:"{INFLUXDB_BUCKET}")\
+        |> range(start: {-1 * PROCESSED_DATA_EXPIRATION_TIME}m)\
+        |> filter(fn:(r) => r._measurement == "rul_values")\
+        {filter_by_node if nodeId is not None else ""}\
+        |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId", "index"])\
+        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
+        |> yield()'
+        
+        query_result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
+        query_result = json.loads(query_result.to_json(orient='records'))
+        
+        return None
+    
+    
     def clear_cached_data(self):
         delete_api = self.client.delete_api()
         
