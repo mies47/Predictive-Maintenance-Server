@@ -13,7 +13,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 class InfluxDB:
     MAIN_MEASUREMENT = ['vibration_measurement']
-    ALL_MEASUREMENTS = MAIN_MEASUREMENT + ['psd_feature', 'rms_feature', 'harmonic_peaks']
+    ALL_MEASUREMENTS = MAIN_MEASUREMENT + ['psd_feature', 'rms_feature', 'harmonic_peaks', 'harmonic_peak_distance', 'rul_values']
 
     def __init__(self):
         self.client = InfluxDBClient(url=INFLUXDB_URI, org=INFLUXDB_ORG, token=INFLUXDB_TOKEN)
@@ -146,7 +146,7 @@ class InfluxDB:
         self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 
 
-    def get_rms_features(self, nodeId = None, measurementId = None):
+    def get_rms_features(self, nodeId: str = None, measurementId: str = None):
         filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
         filter_by_measurement = f'|> filter(fn:(r) => r.measurementId == "{measurementId}")'
 
@@ -190,7 +190,7 @@ class InfluxDB:
         self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 
 
-    def get_psd_features(self, nodeId = None, measurementId = None):
+    def get_psd_features(self, nodeId: str = None, measurementId: str = None):
         filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
         filter_by_measurement = f'|> filter(fn:(r) => r.measurementId == "{measurementId}")'
 
@@ -233,7 +233,7 @@ class InfluxDB:
         self.write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 
 
-    def get_harmonic_peaks(self, nodeId = None, measurementId = None):
+    def get_harmonic_peaks(self, nodeId: str = None, measurementId: str = None):
         filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
         filter_by_measurement = f'|> filter(fn:(r) => r.measurementId == "{measurementId}")'
 
@@ -259,6 +259,32 @@ class InfluxDB:
         return results
     
     
+    def get_harmonic_peak_distance(self, nodeId: str = None, measurementId: str = None):
+        filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
+        filter_by_measurement = f'|> filter(fn:(r) => r.measurementId == "{measurementId}")'
+        
+        query = f'from(bucket:"{INFLUXDB_BUCKET}")\
+        |> range(start: {-1 * PROCESSED_DATA_EXPIRATION_TIME}m)\
+        |> filter(fn:(r) => r._measurement == "harmonic_peak_distance")\
+        {filter_by_node if nodeId is not None else ""}\
+        {filter_by_measurement if measurementId is not None else ""}\
+        |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId", "index", "distance", "compared_node_zone"])\
+        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
+        |> yield()'
+        
+        query_result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
+        query_result = json.loads(query_result.to_json(orient='records'))
+        
+        results = defaultdict(lambda: defaultdict(lambda: []))
+        for r in query_result:
+            results[r['nodeId']][r['measurementId']].append({
+                'compared_node_zone': r['compared_node_zone'],
+                'distance': r['distance']
+            })
+        
+        return results
+    
+    
     def get_rul_values(self, nodeId = None):
         filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
         
@@ -266,14 +292,16 @@ class InfluxDB:
         |> range(start: {-1 * PROCESSED_DATA_EXPIRATION_TIME}m)\
         |> filter(fn:(r) => r._measurement == "rul_values")\
         {filter_by_node if nodeId is not None else ""}\
-        |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId", "index"])\
+        |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId", "index", "rul_in_days"])\
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
         |> yield()'
         
         query_result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
         query_result = json.loads(query_result.to_json(orient='records'))
         
-        return None
+        results = [{'node_id': r['nodeId'], 'rul_in_days': r['rul_in_days']} for r in query_result]
+        
+        return results
     
     
     def clear_cached_data(self):
