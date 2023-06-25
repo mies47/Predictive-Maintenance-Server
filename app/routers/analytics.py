@@ -82,6 +82,14 @@ async def get_harmonic_peaks(nodeId: str = None, measurementId: str = None, admi
     return JSONResponse(content=harmonic_peaks, status_code=status.HTTP_200_OK)
 
 
+@router.get('/harmonicPeakDistance')
+async def get_harmonic_peak_distance_from_labeled_data(nodeId: str = None, measurementId: str = None, admin = Depends(get_current_admin)):
+    
+    harmonic_peaks_distances = influx.get_harmonic_peak_distance(nodeId=nodeId, measurementId=measurementId)
+    if harmonic_peaks_distances:
+        return JSONResponse(content=harmonic_peaks_distances, status_code=status.HTTP_200_OK)
+
+
 @router.get('/rul')
 async def get_rul_values(nodeId: str = None, admin = Depends(get_current_admin)):
     

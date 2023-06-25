@@ -67,9 +67,8 @@ class RUL:
 
         return (summation + np.sum(list(map(lambda point: point[1], q2)))) / (counter + len(q2))
 
-
-    def fit_model(self, measurements, harmonic_peaks, labeled_harmonic_peaks):
-        X = np.arange(start=0, stop=len(measurements), step=1)
-        y = np.array([self._harmonic_peak_distance(harmonic_peaks[measurement], labeled_harmonic_peaks) for measurement in measurements], dtype=np.float64)
+    
+    def get_peak_harmonic_distance(self, measurements, harmonic_peaks, labeled_harmonic_peaks):
+        result = np.array([self._harmonic_peak_distance(harmonic_peaks[measurement], labeled_harmonic_peaks) for measurement in measurements], dtype=np.float64)
         
-        return self._ransac.fit(X=X, y=y)
+        return result
