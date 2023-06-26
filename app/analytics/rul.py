@@ -4,6 +4,7 @@ from .ransac import RANSAC
 from ..utils.constants import SMOOTHING_WINDOW_SIZE
 
 from typing import List, Dict, Tuple
+from collections import defaultdict
 
 
 class RUL:
@@ -65,10 +66,21 @@ class RUL:
             summation += dist
             counter += 1
 
-        return (summation + np.sum(list(map(lambda point: point[1], q2)))) / (counter + len(q2))
+        return (summation + np.sum(list(map(lambda point: point[1], q2)))) / (counter + len(p_2))
 
     
-    def get_peak_harmonic_distance(self, measurements, harmonic_peaks, labeled_harmonic_peaks):
-        result = np.array([self._harmonic_peak_distance(harmonic_peaks[measurement], labeled_harmonic_peaks) for measurement in measurements], dtype=np.float64)
+    def get_peak_harmonic_distance(self,
+                                   harmonic_peaks: Dict[str, Dict[str, List[Dict[str, float]]]],
+                                   labeled_harmonic_peaks: List[Dict[str, List[Dict[str, float]] | str]]):
+
+        harmonic_distances = defaultdict(lambda: defaultdict(lambda: []))
         
-        return result
+        for nId, measurements in harmonic_peaks.items():
+            for mId, features in measurements.items():
+                for labeled_data in labeled_harmonic_peaks:
+                    harmonic_distances[nId][mId].append({
+                        'compared_node_zone': labeled_data['node_zone'],
+                        'distance': self._harmonic_peak_distance(p_1=features, p_2=labeled_data['harmonic_peaks'])
+                    })
+                    
+        return harmonic_distances

@@ -7,13 +7,14 @@ from .clustering import MeanShiftClustering
 
 from collections import defaultdict
 from copy import deepcopy
+from typing import List, Dict
 
 from ..utils.constants import SMOOTHING_WINDOW_SIZE, SAMPLING_RATE, MAXIMUM_NUMBER_OF_PEAKS
 
 class Preprocesser:
 
     def __init__(self,
-                 matrices: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: []))) = None,
+                 matrices: Dict[str, Dict[str, Dict[str, List]]] = None,
                  nodes_ids = None,
                  measurements_ids = None):
 
@@ -90,7 +91,7 @@ class Preprocesser:
         return psd_feature
 
 
-    def _compute_measurements_average_accelaration(self, vibration_measurements: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+    def _compute_measurements_average_accelaration(self, vibration_measurements: Dict[str, Dict[str, Dict[str, List]]]):
         '''Using this method to pinpoint outlier sensor data'''
         
         # Creating a 3-cells vector for each measurement indicating x, y, z means for each measurement
@@ -113,7 +114,7 @@ class Preprocesser:
         return average_accelaration_points
     
 
-    def _outlier_detection(self, vibration_data: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [])))):
+    def _outlier_detection(self, vibration_data: Dict[str, Dict[str, Dict[str, List]]]):
         '''Returns filtered data after outlier detection process'''
 
         # Computing measurements average accelaration for outlier detection
