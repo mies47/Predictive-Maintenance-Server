@@ -301,6 +301,22 @@ class InfluxDB:
         return results
     
     
+    def get_starting_service_date(self):
+        
+        query = f'from(bucket:"{INFLUXDB_BUCKET}")\
+        |> range(start: 0)\
+        |> filter(fn:(r) => r._measurement == "vibration_measurement")\
+        |> first()'
+        
+        query_result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
+        query_result = json.loads(query_result.to_json(orient='records'))
+        
+        try:
+            return query_result[0]['_time'] // 1000
+        except:
+            return None
+    
+    
     def clear_cached_data(self):
         delete_api = self.client.delete_api()
         
