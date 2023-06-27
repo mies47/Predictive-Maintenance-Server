@@ -259,7 +259,7 @@ class InfluxDB:
         return results
     
     
-    def get_harmonic_peak_distance(self, nodeId: str = None, measurementId: str = None):
+    def get_harmonic_peak_distance_from_healthy_zone(self, nodeId: str = None, measurementId: str = None):
         filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
         filter_by_measurement = f'|> filter(fn:(r) => r.measurementId == "{measurementId}")'
         
@@ -268,7 +268,7 @@ class InfluxDB:
         |> filter(fn:(r) => r._measurement == "harmonic_peak_distance")\
         {filter_by_node if nodeId is not None else ""}\
         {filter_by_measurement if measurementId is not None else ""}\
-        |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId", "index", "distance", "compared_node_zone"])\
+        |> keep(columns: ["_time", "_field", "_value", "nodeId", "measurementId", "index", "distance"])\
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
         |> yield()'
         
@@ -277,10 +277,7 @@ class InfluxDB:
         
         results = defaultdict(lambda: defaultdict(lambda: []))
         for r in query_result:
-            results[r['nodeId']][r['measurementId']].append({
-                'compared_node_zone': r['compared_node_zone'],
-                'distance': r['distance']
-            })
+            results[r['nodeId']][r['measurementId']].append(r['distance'])
         
         return results
     
