@@ -13,7 +13,12 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 class InfluxDB:
     MAIN_MEASUREMENT = ['vibration_measurement']
-    ALL_MEASUREMENTS = MAIN_MEASUREMENT + ['psd_feature', 'rms_feature', 'harmonic_peaks', 'harmonic_peak_distance', 'rul_values']
+    ALL_MEASUREMENTS = MAIN_MEASUREMENT + ['psd_feature',
+                                           'rms_feature',
+                                           'harmonic_peaks',
+                                           'labeled_harmonic_peaks',
+                                           'harmonic_peak_distance',
+                                           'rul_values']
 
     def __init__(self):
         self.client = InfluxDBClient(url=INFLUXDB_URI, org=INFLUXDB_ORG, token=INFLUXDB_TOKEN)
@@ -298,6 +303,36 @@ class InfluxDB:
         
         results = [{'node_id': r['nodeId'], 'rul_in_days': r['rul_in_days']} for r in query_result]
         
+        return results
+    
+    
+    def get_labeled_harmonic_peaks(self):
+
+        query = f'from(bucket:"{INFLUXDB_BUCKET}")\
+        |> filter(fn:(r) => r._measurement == "labeled_harmonic_peaks")\
+        |> keep(columns: ["_time", "_field", "_value", "measurementId", "frequency", "index", "zone"])\
+        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
+        |> yield()'
+
+        query_result = self.query_api.query_data_frame(org=INFLUXDB_ORG, query=query)
+        query_result = json.loads(query_result.to_json(orient='records'))
+
+        results = dict()
+        for r in query_result:
+            measurementId = r['measurementId']
+            
+            if measurementId not in results.keys():
+                results[measurementId] = dict()
+                
+                results[measurementId]['time'] = r['_time'] // 1000
+                results[measurementId]['zone'] = r['zone']
+                results[measurementId]['harmonic_peaks'] = []
+                
+            results[measurementId]['harmonic_peaks'].append({
+                'peak_value': r['peak_value'],
+                'frequency': r['frequency']
+            })
+
         return results
     
     

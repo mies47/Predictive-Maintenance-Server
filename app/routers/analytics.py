@@ -90,6 +90,24 @@ async def get_harmonic_peak_distance_from_labeled_data(nodeId: str = None, measu
     if harmonic_peaks_distances:
         return JSONResponse(content=harmonic_peaks_distances, status_code=status.HTTP_200_OK)
     
+    labeled_data = influx.get_labeled_harmonic_peaks()
+    if not labeled_data:
+        return JSONResponse(content='Not implemented yet!', status_code=status.HTTP_501_NOT_IMPLEMENTED)
+
+    harmonic_peaks = influx.get_harmonic_peaks(nodeId=nodeId, measurementId=measurementId)
+    if not harmonic_peaks:
+        vibration_data = influx.get_vibration_data(nodeId=nodeId, measurementId=measurementId)
+        nodes_ids = influx.get_all_nodes_id()
+        measurements_ids = influx.get_all_measurements_id()
+
+        transformer = Transformer(vibration_data=vibration_data)
+        matrices = transformer.get_matrices()
+
+        preprocessor = Preprocesser(matrices=matrices, nodes_ids=nodes_ids, measurements_ids=measurements_ids)  
+        harmonic_peaks = preprocessor.harmonic_peak_feature_extraction()
+        
+        influx.write_harmonic_peaks(harmonic_peaks=harmonic_peaks) 
+    
     rul_model = RemainingUsefulLifetimeModel()
 
 
@@ -101,6 +119,7 @@ async def get_rul_values(nodeId: str = None, admin = Depends(get_current_admin))
         return JSONResponse(content=rul_values, status_code=status.HTTP_200_OK)
     
     rul_model = RemainingUsefulLifetimeModel()
+    labeled_data = influx.get_labeled_harmonic_peaks()
     
 
 @router.delete('/cachedData')
