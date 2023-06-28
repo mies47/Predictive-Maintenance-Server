@@ -90,8 +90,9 @@ async def get_harmonic_peak_distance_from_labeled_data(nodeId: str = None, measu
     if harmonic_peaks_distances:
         return JSONResponse(content=harmonic_peaks_distances, status_code=status.HTTP_200_OK)
     
+    starting_service_date = influx.get_starting_service_date()
     labeled_data = influx.get_labeled_harmonic_peaks()
-    if not labeled_data:
+    if not labeled_data or not starting_service_date:
         return JSONResponse(content='Not implemented yet!', status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
     harmonic_peaks = influx.get_harmonic_peaks(nodeId=nodeId, measurementId=measurementId)

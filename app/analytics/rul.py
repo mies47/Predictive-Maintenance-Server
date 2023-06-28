@@ -4,7 +4,7 @@ from .ransac import RANSAC
 from ..utils.constants import SMOOTHING_WINDOW_SIZE
 
 from typing import List, Dict, Tuple
-
+from collections import defaultdict
 
 class RemainingUsefulLifetimeModel:
 
@@ -70,8 +70,25 @@ class RemainingUsefulLifetimeModel:
     
     def _get_peak_harmonic_distance_from_healthy_zone(self,
                                                      harmonic_peak: Dict[str, float],
-                                                     healthy_harmonic_peaks: List[Dict[str, float]]):
+                                                     healthy_harmonic_peaks: List[List[Dict[str, float]]]):
 
         harmonic_distances = [self._harmonic_peak_distance(p_1=harmonic_peak, p_2=healthy_harmonic_peak) for healthy_harmonic_peak in healthy_harmonic_peaks]
                     
         return harmonic_distances
+    
+    
+    def get_measurements_distance_from_healthy_zone(self,
+                                                    harmonic_peaks: Dict[str, Dict[str, List[Dict[str, float]]]],
+                                                    labeled_peaks: Dict):
+        
+        healthy_harmonic_peaks = []
+        for _, labeled_data in labeled_peaks.items():
+            if labeled_peaks['zone'] == 'A':
+                healthy_harmonic_peaks.append(labeled_data['harmonic_peaks'])
+                
+        distances = defaultdict(lambda: defaultdict(lambda: []))
+        for nId, measurements in harmonic_peaks.items():
+            for mId, harmonic_peak in measurements.items():
+                distances[nId][mId] = self._get_peak_harmonic_distance_from_healthy_zone(harmonic_peak=harmonic_peak, healthy_harmonic_peaks=healthy_harmonic_peaks)
+                
+        return distances
