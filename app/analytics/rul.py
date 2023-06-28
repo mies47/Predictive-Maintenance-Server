@@ -92,3 +92,31 @@ class RemainingUsefulLifetimeModel:
                 distances[nId][mId] = self._get_peak_harmonic_distance_from_healthy_zone(harmonic_peak=harmonic_peak, healthy_harmonic_peaks=healthy_harmonic_peaks)
                 
         return distances
+    
+    
+    def get_rul_model(self,
+                      starting_service_time: float,
+                      all_measurements: List[Dict[str, str | float]],
+                      harmonic_peaks: Dict[str, Dict[str, List[Dict[str, float]]]],
+                      labeled_peaks: Dict
+                      ):
+        
+        get_service_time_in_days = lambda service_time: (service_time - starting_service_time) // (24 * 60 * 60)
+        
+        distances = self.get_measurements_distance_from_healthy_zone(harmonic_peaks=harmonic_peaks, labeled_peaks=labeled_peaks)
+        
+        measurements_distances = dict()
+        for _, measurements in distances.items():
+            for mId, distance in measurements.items():
+                measurements_distances[mId] = distance
+        
+        measurements_ids = [measurement['measurementId'] for measurement in all_measurements]
+        measurements_time = {measurement['measurementId']: get_service_time_in_days(measurement['time']) for measurement in all_measurements}
+        
+        X_train = [measurements_time[measurement_id] for measurement_id in measurements_ids]
+        y_train = [measurements_distances[measurement_id] for measurement_id in measurements_ids]
+        
+        self._ransac.fit(X=X_train, y=y_train)
+        
+        return self._ransac
+        
