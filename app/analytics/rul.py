@@ -77,6 +77,10 @@ class RemainingUsefulLifetimeModel:
         return harmonic_distances
     
     
+    def _get_service_time_in_days(self, service_time: float, starting_service_time: float):
+        return (service_time - starting_service_time) // (24 * 60 * 60)
+    
+    
     def get_measurements_distance_from_healthy_zone(self,
                                                     harmonic_peaks: Dict[str, Dict[str, List[Dict[str, float]]]],
                                                     labeled_peaks: Dict):
@@ -101,8 +105,6 @@ class RemainingUsefulLifetimeModel:
                       labeled_peaks: Dict
                       ):
         
-        get_service_time_in_days = lambda service_time: (service_time - starting_service_time) // (24 * 60 * 60)
-        
         distances = self.get_measurements_distance_from_healthy_zone(harmonic_peaks=harmonic_peaks, labeled_peaks=labeled_peaks)
         
         measurements_distances = dict()
@@ -111,7 +113,7 @@ class RemainingUsefulLifetimeModel:
                 measurements_distances[mId] = distance
         
         measurements_ids = [measurement['measurementId'] for measurement in all_measurements]
-        measurements_time = {measurement['measurementId']: get_service_time_in_days(measurement['time']) for measurement in all_measurements}
+        measurements_time = {measurement['measurementId']: self._get_service_time_in_days(service_time=measurement['time'], starting_service_time=starting_service_time) for measurement in all_measurements}
         
         X_train = [measurements_time[measurement_id] for measurement_id in measurements_ids]
         y_train = [measurements_distances[measurement_id] for measurement_id in measurements_ids]
