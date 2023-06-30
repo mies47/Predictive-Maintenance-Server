@@ -119,8 +119,26 @@ async def get_rul_values(nodeId: str = None, admin = Depends(get_current_admin))
     if rul_values:
         return JSONResponse(content=rul_values, status_code=status.HTTP_200_OK)
     
-    rul_model = RemainingUsefulLifetimeModel()
+    starting_service_date = influx.get_starting_service_date()
     labeled_data = influx.get_labeled_harmonic_peaks()
+    if not labeled_data or not starting_service_date:
+        return JSONResponse(content='Not implemented yet!', status_code=status.HTTP_501_NOT_IMPLEMENTED)
+
+    harmonic_peaks = influx.get_harmonic_peaks(nodeId=nodeId)
+    if not harmonic_peaks:
+        vibration_data = influx.get_vibration_data(nodeId=nodeId)
+        nodes_ids = influx.get_all_nodes_id()
+        measurements_ids = influx.get_all_measurements_id()
+
+        transformer = Transformer(vibration_data=vibration_data)
+        matrices = transformer.get_matrices()
+
+        preprocessor = Preprocesser(matrices=matrices, nodes_ids=nodes_ids, measurements_ids=measurements_ids)  
+        harmonic_peaks = preprocessor.harmonic_peak_feature_extraction()
+        
+        influx.write_harmonic_peaks(harmonic_peaks=harmonic_peaks) 
+    
+    rul_model = RemainingUsefulLifetimeModel()
     
 
 @router.delete('/cachedData')
