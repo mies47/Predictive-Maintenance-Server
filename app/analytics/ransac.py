@@ -4,6 +4,7 @@ from sklearn.linear_model import RANSACRegressor
 class RANSAC:
     def __init__(self):
         self.ransac = RANSACRegressor()
+        self.fitted = False
 
 
     def fit(self, X, y):
@@ -11,14 +12,13 @@ class RANSAC:
             return False
         
         self.ransac.fit(X=X, y=y)
+        self.fitted = True
 
         return True
     
 
-    def predict_model(self, train_X, train_y, line_X):
-        if train_X is None or train_y is None:
-            return
-        
-        self.ransac.fit(X=train_X, y=train_y)
+    def predict(self, line_X = None):
+        if not self.fitted:
+            return None
         
         return self.ransac.predict(X=line_X)

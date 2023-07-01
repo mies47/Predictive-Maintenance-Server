@@ -1,7 +1,7 @@
 import numpy as np
 
 from .ransac import RANSAC
-from ..utils.constants import SMOOTHING_WINDOW_SIZE
+from ..utils.constants import SMOOTHING_WINDOW_SIZE, HEALTHY_ZONE_THRESHOLD
 
 from typing import List, Dict, Tuple
 from collections import defaultdict
@@ -98,12 +98,12 @@ class RemainingUsefulLifetimeModel:
         return distances
     
     
-    def get_rul_model(self,
+    def fit_rul_model(self,
                       starting_service_time: float,
                       all_measurements: List[Dict[str, str | float]],
                       harmonic_peaks: Dict[str, Dict[str, List[Dict[str, float]]]],
                       labeled_peaks: Dict
-                      ):
+                      ) -> bool:
         
         distances = self.get_measurements_distance_from_healthy_zone(harmonic_peaks=harmonic_peaks, labeled_peaks=labeled_peaks)
         
@@ -118,7 +118,5 @@ class RemainingUsefulLifetimeModel:
         X_train = [measurements_time[measurement_id] for measurement_id in measurements_ids]
         y_train = [measurements_distances[measurement_id] for measurement_id in measurements_ids]
         
-        self._ransac.fit(X=X_train, y=y_train)
-        
-        return self._ransac
+        return self._ransac.fit(X=X_train, y=y_train)
         
