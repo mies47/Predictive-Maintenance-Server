@@ -91,8 +91,8 @@ async def get_harmonic_peak_distance_from_labeled_data(nodeId: str = None, measu
         return JSONResponse(content=harmonic_peaks_distances, status_code=status.HTTP_200_OK)
     
     starting_service_date = influx.get_starting_service_date()
-    labeled_data = influx.get_labeled_harmonic_peaks()
-    if not labeled_data or not starting_service_date:
+    labeled_peaks = influx.get_labeled_harmonic_peaks()
+    if not labeled_peaks or not starting_service_date:
         return JSONResponse(content='Not implemented yet!', status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
     harmonic_peaks = influx.get_harmonic_peaks(nodeId=nodeId, measurementId=measurementId)
@@ -110,6 +110,12 @@ async def get_harmonic_peak_distance_from_labeled_data(nodeId: str = None, measu
         influx.write_harmonic_peaks(harmonic_peaks=harmonic_peaks) 
     
     rul_model = RemainingUsefulLifetimeModel()
+    
+    distances = rul_model.get_measurements_distance_from_healthy_zone(harmonic_peaks=harmonic_peaks, labeled_peaks=labeled_peaks)
+    
+    influx.write_harmonic_peak_ditance_from_healthy_zone(distances=distances)
+    
+    return JSONResponse(content=distances, status_code=status.HTTP_200_OK)
 
 
 @router.get('/rul')
@@ -120,8 +126,8 @@ async def get_rul_values(nodeId: str = None, admin = Depends(get_current_admin))
         return JSONResponse(content=rul_values, status_code=status.HTTP_200_OK)
     
     starting_service_date = influx.get_starting_service_date()
-    labeled_data = influx.get_labeled_harmonic_peaks()
-    if not labeled_data or not starting_service_date:
+    labeled_peaks = influx.get_labeled_harmonic_peaks()
+    if not labeled_peaks or not starting_service_date:
         return JSONResponse(content='Not implemented yet!', status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
     harmonic_peaks = influx.get_harmonic_peaks(nodeId=nodeId)

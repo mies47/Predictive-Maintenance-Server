@@ -264,6 +264,14 @@ class InfluxDB:
         return results
     
     
+    def write_harmonic_peak_ditance_from_healthy_zone(self, distances):
+        ...
+        
+        
+    def write_rul_values(self, rul_values):
+        ...
+    
+    
     def get_harmonic_peak_distance_from_healthy_zone(self, nodeId: str = None, measurementId: str = None):
         filter_by_node = f'|> filter(fn:(r) => r.nodeId == "{nodeId}")'
         filter_by_measurement = f'|> filter(fn:(r) => r.measurementId == "{measurementId}")'
