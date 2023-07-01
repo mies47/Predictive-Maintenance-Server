@@ -13,3 +13,6 @@ SAMPLING_RATE = 4000
 
 # Processed Data Expiration Time in Minutes
 PROCESSED_DATA_EXPIRATION_TIME = 15
+
+# Distance From Healthy Zone Threshold
+HEALTHY_ZONE_THRESHOLD = 0.2
