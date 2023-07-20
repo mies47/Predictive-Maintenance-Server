@@ -177,8 +177,8 @@ class Preprocesser:
                     psd_values.append(psd_feature['psd_value'])
                     frequencies.append(psd_feature['frequency'])
 
-                smoothed_feature = self._smooth(x=psd_values, method='hanning')
+                # smoothed_feature = self._smooth(x=psd_values, method='hanning')
 
-                harmonic_peaks[nId][mId] = self._find_peaks(x=smoothed_feature, freqs=frequencies)
+                harmonic_peaks[nId][mId] = self._find_peaks(x=psd_values, freqs=frequencies)
 
         return harmonic_peaks
