@@ -19,7 +19,7 @@ load_dotenv()
 DATASET_MACHINES = [uuid.uuid4().hex for _ in range(4)]
 DATASET_MEASUREMENTS = [uuid.uuid4().hex for _ in range(10)]
 
-INFLUXDB_HOST = os.getenv('INFLUXDB_HOST')
+INFLUXDB_HOST = os.getenv('INFLUXDB_CONTAINER')
 INFLUXDB_PORT = os.getenv('INFLUXDB_PORT')
 INFLUXDB_ORG = os.getenv('INFLUXDB_ORG')
 INFLUXDB_BUCKET = os.getenv('INFLUXDB_BUCKET')
