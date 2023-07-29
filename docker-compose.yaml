@@ -21,6 +21,8 @@ services:
       PGDATA: /data/postgres
     volumes:
       - postgres-data:/data/postgres
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
 
   influxdb:
     image: influxdb:2.6.1
